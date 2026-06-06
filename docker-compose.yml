@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: kb-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: knowledge_base
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - kb-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: kb-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - kb-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kb-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=mysql;Port=3306;Database=knowledge_base;User=root;Password=root123;CharSet=utf8mb4;
+      - ConnectionStrings__RedisConnection=redis:6379,abortConnect=false
+      - Jwt__Secret=KnowledgeBaseSecretKey1234567890ABCDEFG
+      - Jwt__Issuer=KnowledgeBase
+      - Jwt__Audience=KnowledgeBase
+      - Jwt__ExpireHours=24
+      - PathBase=/api
+    ports:
+      - "5000:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - kb-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  kb-network:
+    driver: bridge

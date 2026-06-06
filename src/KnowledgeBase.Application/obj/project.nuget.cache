@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "dgSpecHash": "BeoGUXp6ES+3gtu4lAUuJ8Hl89Gf5U1EsdwM/U12vb7ZFwy6rqg4rNflJGd62DhXW5ENPdYF6bvnCwpMtxA+/A==",
+  "success": true,
+  "projectFilePath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\charlesshuai\\.nuget\\packages\\microsoft.extensions.configuration\\7.0.0\\microsoft.extensions.configuration.7.0.0.nupkg.sha512",
+    "C:\\Users\\charlesshuai\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\7.0.0\\microsoft.extensions.configuration.abstractions.7.0.0.nupkg.sha512",
+    "C:\\Users\\charlesshuai\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\7.0.0\\microsoft.extensions.dependencyinjection.7.0.0.nupkg.sha512",
+    "C:\\Users\\charlesshuai\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\7.0.0\\microsoft.extensions.dependencyinjection.abstractions.7.0.0.nupkg.sha512",
+    "C:\\Users\\charlesshuai\\.nuget\\packages\\microsoft.extensions.primitives\\7.0.0\\microsoft.extensions.primitives.7.0.0.nupkg.sha512",
+    "C:\\Users\\charlesshuai\\.nuget\\packages\\microsoft.identitymodel.abstractions\\7.0.2\\microsoft.identitymodel.abstractions.7.0.2.nupkg.sha512",
+    "C:\\Users\\charlesshuai\\.nuget\\packages\\microsoft.identitymodel.jsonwebtokens\\7.0.2\\microsoft.identitymodel.jsonwebtokens.7.0.2.nupkg.sha512",
+    "C:\\Users\\charlesshuai\\.nuget\\packages\\microsoft.identitymodel.logging\\7.0.2\\microsoft.identitymodel.logging.7.0.2.nupkg.sha512",
+    "C:\\Users\\charlesshuai\\.nuget\\packages\\microsoft.identitymodel.tokens\\7.0.2\\microsoft.identitymodel.tokens.7.0.2.nupkg.sha512",
+    "C:\\Users\\charlesshuai\\.nuget\\packages\\system.identitymodel.tokens.jwt\\7.0.2\\system.identitymodel.tokens.jwt.7.0.2.nupkg.sha512"
+  ],
+  "logs": []
+}
