@@ -1,0 +1,33 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Bb]uild/
+
+# NuGet
+packages/
+*.nupkg
+
+# Logs
+*.log
+
+# Environment
+.env
+appsettings.Local.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
