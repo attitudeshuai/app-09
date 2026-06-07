@@ -11,6 +11,7 @@ public interface IUnitOfWork : IDisposable
     IDocumentCommentRepository DocumentComments { get; }
     IDocumentViewHistoryRepository DocumentViewHistories { get; }
     IUserPasswordHistoryRepository UserPasswordHistories { get; }
+    IOperationLogRepository OperationLogs { get; }
     Task<int> SaveChangesAsync();
     Task<ITransaction> BeginTransactionAsync();
 }

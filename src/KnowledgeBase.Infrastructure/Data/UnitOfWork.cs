@@ -15,6 +15,7 @@ public class UnitOfWork : IUnitOfWork
     private IDocumentCommentRepository? _documentComments;
     private IDocumentViewHistoryRepository? _documentViewHistories;
     private IUserPasswordHistoryRepository? _userPasswordHistories;
+    private IOperationLogRepository? _operationLogs;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -30,6 +31,7 @@ public class UnitOfWork : IUnitOfWork
     public IDocumentCommentRepository DocumentComments => _documentComments ??= new DocumentCommentRepository(_context);
     public IDocumentViewHistoryRepository DocumentViewHistories => _documentViewHistories ??= new DocumentViewHistoryRepository(_context);
     public IUserPasswordHistoryRepository UserPasswordHistories => _userPasswordHistories ??= new UserPasswordHistoryRepository(_context);
+    public IOperationLogRepository OperationLogs => _operationLogs ??= new OperationLogRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

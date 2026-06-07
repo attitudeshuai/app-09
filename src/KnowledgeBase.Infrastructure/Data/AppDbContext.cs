@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<DocumentComment> DocumentComments { get; set; }
     public DbSet<DocumentViewHistory> DocumentViewHistories { get; set; }
     public DbSet<UserPasswordHistory> UserPasswordHistories { get; set; }
+    public DbSet<OperationLog> OperationLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -146,6 +147,25 @@ public class AppDbContext : DbContext
             entity.HasOne(h => h.Document)
                   .WithMany()
                   .HasForeignKey(h => h.DocumentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OperationLog>(entity =>
+        {
+            entity.HasKey(o => o.Id);
+            entity.HasIndex(o => o.UserId);
+            entity.HasIndex(o => o.ActionType);
+            entity.HasIndex(o => o.TargetType);
+            entity.HasIndex(o => o.CreatedAt);
+            entity.Property(o => o.ActionType).HasMaxLength(50).IsRequired();
+            entity.Property(o => o.TargetType).HasMaxLength(50).IsRequired();
+            entity.Property(o => o.TargetName).HasMaxLength(200);
+            entity.Property(o => o.Details).HasColumnType("longtext");
+            entity.Property(o => o.IpAddress).HasMaxLength(50);
+            entity.Property(o => o.UserAgent).HasMaxLength(500);
+            entity.HasOne(o => o.User)
+                  .WithMany()
+                  .HasForeignKey(o => o.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }

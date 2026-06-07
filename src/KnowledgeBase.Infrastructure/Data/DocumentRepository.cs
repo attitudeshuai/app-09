@@ -152,4 +152,16 @@ public class DocumentRepository : IDocumentRepository
                      && d.PublishTime.Value <= now)
             .ToListAsync();
     }
+
+    public async Task<int> GetDocumentCountByUserIdAsync(long userId, DocumentStatus? status = null)
+    {
+        var query = _context.Documents.Where(d => d.CreatedBy == userId);
+
+        if (status.HasValue)
+        {
+            query = query.Where(d => d.Status == status.Value);
+        }
+
+        return await query.CountAsync();
+    }
 }

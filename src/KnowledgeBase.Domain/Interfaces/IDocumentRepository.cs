@@ -16,4 +16,5 @@ public interface IDocumentRepository : IRepository<Document>
     Task<IEnumerable<Document>> GetByCategoryIdAsync(long categoryId);
     Task<int> UpdateCategoryIdAsync(long sourceCategoryId, long targetCategoryId, long updatedBy);
     Task<IEnumerable<Document>> GetScheduledDocumentsToPublishAsync(DateTime now);
+    Task<int> GetDocumentCountByUserIdAsync(long userId, DocumentStatus? status = null);
 }

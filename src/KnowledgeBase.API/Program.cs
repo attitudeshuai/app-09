@@ -120,6 +120,8 @@ app.UseCors(policy =>
           .AllowAnyHeader();
 });
 
+app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

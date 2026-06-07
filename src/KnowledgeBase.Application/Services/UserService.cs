@@ -188,6 +188,55 @@ public class UserService : IUserService
         return await _unitOfWork.Users.EmailExistsAsync(email);
     }
 
+    public async Task<UserProfileDto> GetProfileAsync(long userId)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new KeyNotFoundException("用户不存在");
+        }
+
+        var totalDocuments = await _unitOfWork.Documents.GetDocumentCountByUserIdAsync(userId);
+        var publishedDocuments = await _unitOfWork.Documents.GetDocumentCountByUserIdAsync(userId, DocumentStatus.Published);
+        var draftDocuments = await _unitOfWork.Documents.GetDocumentCountByUserIdAsync(userId, DocumentStatus.Draft);
+
+        return new UserProfileDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            Nickname = user.Nickname,
+            Avatar = user.Avatar,
+            Role = (int)user.Role,
+            CreatedAt = user.CreatedAt,
+            TotalDocuments = totalDocuments,
+            PublishedDocuments = publishedDocuments,
+            DraftDocuments = draftDocuments
+        };
+    }
+
+    public async Task UpdateProfileAsync(long userId, UpdateProfileRequest request)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new KeyNotFoundException("用户不存在");
+        }
+
+        if (request.Nickname != null)
+        {
+            user.Nickname = request.Nickname;
+        }
+        if (request.Avatar != null)
+        {
+            user.Avatar = request.Avatar;
+        }
+        user.UpdatedBy = userId;
+
+        await _unitOfWork.Users.UpdateAsync(user);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
     private static UserDto MapToDto(User user)
     {
         return new UserDto

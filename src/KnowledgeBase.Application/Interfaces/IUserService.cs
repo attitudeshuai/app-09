@@ -13,4 +13,6 @@ public interface IUserService
     Task ChangePasswordAsync(long id, ChangePasswordRequest request);
     Task<bool> UsernameExistsAsync(string username);
     Task<bool> EmailExistsAsync(string email);
+    Task<UserProfileDto> GetProfileAsync(long userId);
+    Task UpdateProfileAsync(long userId, UpdateProfileRequest request);
 }

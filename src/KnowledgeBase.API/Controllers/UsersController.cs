@@ -14,10 +14,12 @@ namespace KnowledgeBase.API.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IFileStorageService _fileStorageService;
 
-    public UsersController(IUserService userService)
+    public UsersController(IUserService userService, IFileStorageService fileStorageService)
     {
         _userService = userService;
+        _fileStorageService = fileStorageService;
     }
 
     [HttpGet]
@@ -127,6 +129,81 @@ public class UsersController : ControllerBase
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("profile")]
+    [ProducesResponseType(typeof(UserProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserProfileDto>> GetProfile()
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var profile = await _userService.GetProfileAsync(userId);
+            return Ok(profile);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("profile")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            await _userService.UpdateProfileAsync(userId, request);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("avatar")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UploadAvatar(IFormFile file)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { message = "请选择要上传的文件" });
+            }
+
+            using (var stream = file.OpenReadStream())
+            {
+                var avatarUrl = await _fileStorageService.UploadAvatarAsync(stream, file.FileName, userId);
+
+                var profile = await _userService.GetProfileAsync(userId);
+                if (!string.IsNullOrEmpty(profile.Avatar) && profile.Avatar.StartsWith("/uploads/"))
+                {
+                    await _fileStorageService.DeleteFileAsync(profile.Avatar);
+                }
+
+                var updateRequest = new UpdateProfileRequest { Avatar = avatarUrl };
+                await _userService.UpdateProfileAsync(userId, updateRequest);
+
+                return Ok(new { avatarUrl });
+            }
         }
         catch (InvalidOperationException ex)
         {
