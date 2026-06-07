@@ -14,4 +14,5 @@ public interface IDocumentRepository : IRepository<Document>
     Task<int> SearchCountAsync(string keyword);
     Task IncrementViewCountAsync(long id);
     Task<IEnumerable<Document>> GetByCategoryIdAsync(long categoryId);
+    Task<int> UpdateCategoryIdAsync(long sourceCategoryId, long targetCategoryId, long updatedBy);
 }

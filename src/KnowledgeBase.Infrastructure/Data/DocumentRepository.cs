@@ -132,4 +132,15 @@ public class DocumentRepository : IDocumentRepository
             .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
             .ToListAsync();
     }
+
+    public async Task<int> UpdateCategoryIdAsync(long sourceCategoryId, long targetCategoryId, long updatedBy)
+    {
+        var now = DateTime.UtcNow;
+        return await _context.Documents
+            .Where(d => d.CategoryId == sourceCategoryId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(d => d.CategoryId, targetCategoryId)
+                .SetProperty(d => d.UpdatedAt, now)
+                .SetProperty(d => d.UpdatedBy, updatedBy));
+    }
 }
