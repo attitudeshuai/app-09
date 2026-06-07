@@ -61,6 +61,7 @@ public class DocumentRepository : IDocumentRepository
         string? keyword,
         long? categoryId,
         DocumentStatus? status,
+        string? tag,
         bool applyVisibilityFilter = false,
         bool isAuthenticated = false,
         UserRole? userRole = null)
@@ -89,15 +90,34 @@ public class DocumentRepository : IDocumentRepository
             query = ApplyVisibilityFilter(query, isAuthenticated, userRole);
         }
 
-        var totalCount = await query.CountAsync();
-        var items = await query
-            .Include(d => d.Category)
-            .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        if (!string.IsNullOrWhiteSpace(tag))
+        {
+            var allDocuments = await query
+                .Include(d => d.Category)
+                .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
+                .ToListAsync();
 
-        return (items, totalCount);
+            var filtered = allDocuments.Where(d => HasExactTag(d.Tags, tag)).ToList();
+            var totalCount = filtered.Count;
+            var items = filtered
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return (items, totalCount);
+        }
+        else
+        {
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Include(d => d.Category)
+                .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
     }
 
     public async Task<IEnumerable<Document>> SearchAsync(string keyword, int pageNumber, int pageSize,
@@ -190,6 +210,78 @@ public class DocumentRepository : IDocumentRepository
         var query = _context.Documents.Where(d => d.Id == documentId && d.Status == DocumentStatus.Published);
         query = ApplyVisibilityFilter(query, isAuthenticated, userRole);
         return await query.AnyAsync();
+    }
+
+    public async Task<Dictionary<string, int>> GetAllTagsWithCountAsync(
+        bool applyVisibilityFilter = false,
+        bool isAuthenticated = false,
+        UserRole? userRole = null)
+    {
+        var query = _context.Documents
+            .Where(d => d.Tags != null && d.Tags != string.Empty);
+
+        if (applyVisibilityFilter)
+        {
+            query = ApplyVisibilityFilter(query, isAuthenticated, userRole);
+        }
+
+        var tagsList = await query.Select(d => d.Tags).ToListAsync();
+        var tagCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var tags in tagsList)
+        {
+            if (string.IsNullOrWhiteSpace(tags)) continue;
+
+            var tagArray = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var tag in tagArray)
+            {
+                var trimmedTag = tag.Trim();
+                if (string.IsNullOrWhiteSpace(trimmedTag)) continue;
+
+                if (tagCounts.ContainsKey(trimmedTag))
+                {
+                    tagCounts[trimmedTag]++;
+                }
+                else
+                {
+                    tagCounts[trimmedTag] = 1;
+                }
+            }
+        }
+
+        return tagCounts;
+    }
+
+    public async Task<IEnumerable<string>> SearchTagsAsync(string keyword, int limit = 10,
+        bool applyVisibilityFilter = false,
+        bool isAuthenticated = false,
+        UserRole? userRole = null)
+    {
+        if (string.IsNullOrWhiteSpace(keyword))
+        {
+            return Enumerable.Empty<string>();
+        }
+
+        var allTags = await GetAllTagsWithCountAsync(applyVisibilityFilter, isAuthenticated, userRole);
+
+        return allTags
+            .Where(kvp => kvp.Key.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(kvp => kvp.Value)
+            .ThenBy(kvp => kvp.Key)
+            .Take(limit)
+            .Select(kvp => kvp.Key)
+            .ToList();
+    }
+
+    private static bool HasExactTag(string? tags, string tag)
+    {
+        if (string.IsNullOrWhiteSpace(tags) || string.IsNullOrWhiteSpace(tag))
+        {
+            return false;
+        }
+
+        var tagArray = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+        return tagArray.Any(t => t.Trim().Equals(tag.Trim(), StringComparison.OrdinalIgnoreCase));
     }
 
     private static IQueryable<Document> ApplyVisibilityFilter(IQueryable<Document> query, bool isAuthenticated, UserRole? userRole)

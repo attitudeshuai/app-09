@@ -80,6 +80,13 @@ public class DocumentPagedRequest
     public string? Keyword { get; set; }
     public long? CategoryId { get; set; }
     public int? Status { get; set; }
+    public string? Tag { get; set; }
+}
+
+public class TagCloudDto
+{
+    public string Name { get; set; } = string.Empty;
+    public int Count { get; set; }
 }
 
 public class BatchOperationResult

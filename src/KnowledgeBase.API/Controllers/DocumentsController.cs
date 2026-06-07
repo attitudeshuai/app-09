@@ -38,7 +38,8 @@ public class DocumentsController : ControllerBase
         [FromQuery] int pageSize = 10,
         [FromQuery] string? keyword = null,
         [FromQuery] long? categoryId = null,
-        [FromQuery] int? status = null)
+        [FromQuery] int? status = null,
+        [FromQuery] string? tag = null)
     {
         var request = new DocumentPagedRequest
         {
@@ -46,12 +47,37 @@ public class DocumentsController : ControllerBase
             PageSize = pageSize,
             Keyword = keyword,
             CategoryId = categoryId,
-            Status = status
+            Status = status,
+            Tag = tag
         };
         var userId = GetCurrentUserIdOrNull();
         var userRole = GetCurrentUserRoleOrNull();
         var applyVisibilityFilter = !status.HasValue || status.Value == (int)DocumentStatus.Published;
         var result = await _documentService.GetPagedAsync(request, userId, userRole, applyVisibilityFilter);
+        return Ok(result);
+    }
+
+    [HttpGet("tags/cloud")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<TagCloudDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<TagCloudDto>>> GetTagCloud()
+    {
+        var userId = GetCurrentUserIdOrNull();
+        var userRole = GetCurrentUserRoleOrNull();
+        var result = await _documentService.GetTagCloudAsync(userId, userRole, applyVisibilityFilter: true);
+        return Ok(result);
+    }
+
+    [HttpGet("tags/search")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<string>>> SearchTags(
+        [FromQuery] string keyword,
+        [FromQuery] int limit = 10)
+    {
+        var userId = GetCurrentUserIdOrNull();
+        var userRole = GetCurrentUserRoleOrNull();
+        var result = await _documentService.SearchTagsAsync(keyword, limit, userId, userRole, applyVisibilityFilter: true);
         return Ok(result);
     }
 

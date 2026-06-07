@@ -20,4 +20,6 @@ public interface IDocumentService
     Task<BatchOperationResult> BatchUpdateVisibilityAsync(List<long> ids, UpdateVisibilityRequest request, long currentUserId);
     Task<BatchOperationResult> BatchMoveCategoryAsync(List<long> ids, long categoryId, long currentUserId);
     Task<BatchOperationResult> BatchDeleteAsync(List<long> ids);
+    Task<IEnumerable<TagCloudDto>> GetTagCloudAsync(long? userId = null, UserRole? userRole = null, bool applyVisibilityFilter = false);
+    Task<IEnumerable<string>> SearchTagsAsync(string keyword, int limit = 10, long? userId = null, UserRole? userRole = null, bool applyVisibilityFilter = false);
 }

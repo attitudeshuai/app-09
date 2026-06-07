@@ -52,7 +52,7 @@ public class DocumentService : IDocumentService
         DocumentStatus? status = request.Status.HasValue ? (DocumentStatus?)request.Status.Value : null;
         var isAuthenticated = userId.HasValue && userId.Value > 0;
         var (items, totalCount) = await _unitOfWork.Documents.GetPagedAsync(
-            request.PageNumber, request.PageSize, request.Keyword, request.CategoryId, status,
+            request.PageNumber, request.PageSize, request.Keyword, request.CategoryId, status, request.Tag,
             applyVisibilityFilter, isAuthenticated, userRole);
 
         var favoritedIds = userId.HasValue && userId.Value > 0
@@ -521,6 +521,30 @@ public class DocumentService : IDocumentService
             IsFavorited = isFavorited,
             IsLiked = isLiked
         };
+    }
+
+    public async Task<IEnumerable<TagCloudDto>> GetTagCloudAsync(long? userId = null, UserRole? userRole = null, bool applyVisibilityFilter = false)
+    {
+        var isAuthenticated = userId.HasValue && userId.Value > 0;
+        var tagCounts = await _unitOfWork.Documents.GetAllTagsWithCountAsync(
+            applyVisibilityFilter, isAuthenticated, userRole);
+
+        return tagCounts
+            .OrderByDescending(kvp => kvp.Value)
+            .ThenBy(kvp => kvp.Key)
+            .Select(kvp => new TagCloudDto
+            {
+                Name = kvp.Key,
+                Count = kvp.Value
+            })
+            .ToList();
+    }
+
+    public async Task<IEnumerable<string>> SearchTagsAsync(string keyword, int limit = 10, long? userId = null, UserRole? userRole = null, bool applyVisibilityFilter = false)
+    {
+        var isAuthenticated = userId.HasValue && userId.Value > 0;
+        return await _unitOfWork.Documents.SearchTagsAsync(
+            keyword, limit, applyVisibilityFilter, isAuthenticated, userRole);
     }
 
     private static DocumentListDto MapToListDto(Document document, bool isFavorited = false, bool isLiked = false)
