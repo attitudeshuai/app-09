@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<DocumentComment> DocumentComments { get; set; }
     public DbSet<DocumentViewHistory> DocumentViewHistories { get; set; }
     public DbSet<UserPasswordHistory> UserPasswordHistories { get; set; }
+    public DbSet<UserFollow> UserFollows { get; set; }
     public DbSet<OperationLog> OperationLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -159,6 +160,22 @@ public class AppDbContext : DbContext
             entity.HasOne(h => h.Document)
                   .WithMany()
                   .HasForeignKey(h => h.DocumentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserFollow>(entity =>
+        {
+            entity.HasKey(uf => new { uf.FollowerId, uf.FollowingId });
+            entity.HasIndex(uf => uf.FollowerId);
+            entity.HasIndex(uf => uf.FollowingId);
+            entity.HasIndex(uf => uf.CreatedAt);
+            entity.HasOne(uf => uf.Follower)
+                  .WithMany()
+                  .HasForeignKey(uf => uf.FollowerId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(uf => uf.Following)
+                  .WithMany()
+                  .HasForeignKey(uf => uf.FollowingId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
 

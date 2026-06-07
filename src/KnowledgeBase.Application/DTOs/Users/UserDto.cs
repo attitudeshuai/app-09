@@ -56,6 +56,9 @@ public class UserProfileDto
     public int TotalDocuments { get; set; }
     public int PublishedDocuments { get; set; }
     public int DraftDocuments { get; set; }
+    public int FollowerCount { get; set; }
+    public int FollowingCount { get; set; }
+    public bool IsFollowing { get; set; }
 }
 
 public class UpdateProfileRequest

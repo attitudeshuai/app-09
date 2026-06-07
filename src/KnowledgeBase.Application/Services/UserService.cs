@@ -199,6 +199,8 @@ public class UserService : IUserService
         var totalDocuments = await _unitOfWork.Documents.GetDocumentCountByUserIdAsync(userId);
         var publishedDocuments = await _unitOfWork.Documents.GetDocumentCountByUserIdAsync(userId, DocumentStatus.Published);
         var draftDocuments = await _unitOfWork.Documents.GetDocumentCountByUserIdAsync(userId, DocumentStatus.Draft);
+        var followerCount = await _unitOfWork.UserFollows.GetFollowerCountAsync(userId);
+        var followingCount = await _unitOfWork.UserFollows.GetFollowingCountAsync(userId);
 
         return new UserProfileDto
         {
@@ -211,7 +213,48 @@ public class UserService : IUserService
             CreatedAt = user.CreatedAt,
             TotalDocuments = totalDocuments,
             PublishedDocuments = publishedDocuments,
-            DraftDocuments = draftDocuments
+            DraftDocuments = draftDocuments,
+            FollowerCount = followerCount,
+            FollowingCount = followingCount,
+            IsFollowing = false
+        };
+    }
+
+    public async Task<UserProfileDto> GetPublicProfileAsync(long userId, long currentUserId)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new KeyNotFoundException("用户不存在");
+        }
+
+        if (!user.IsActive)
+        {
+            throw new InvalidOperationException("该用户已被禁用");
+        }
+
+        var totalDocuments = await _unitOfWork.Documents.GetDocumentCountByUserIdAsync(userId, DocumentStatus.Published);
+        var followerCount = await _unitOfWork.UserFollows.GetFollowerCountAsync(userId);
+        var followingCount = await _unitOfWork.UserFollows.GetFollowingCountAsync(userId);
+        var isFollowing = currentUserId > 0 && currentUserId != userId
+            ? await _unitOfWork.UserFollows.IsFollowingAsync(currentUserId, userId)
+            : false;
+
+        return new UserProfileDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = string.Empty,
+            Nickname = user.Nickname,
+            Avatar = user.Avatar,
+            Role = (int)user.Role,
+            CreatedAt = user.CreatedAt,
+            TotalDocuments = totalDocuments,
+            PublishedDocuments = totalDocuments,
+            DraftDocuments = 0,
+            FollowerCount = followerCount,
+            FollowingCount = followingCount,
+            IsFollowing = isFollowing
         };
     }
 

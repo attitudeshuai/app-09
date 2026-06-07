@@ -57,6 +57,29 @@ public class UsersController : ControllerBase
         }
     }
 
+    [HttpGet("{id}/profile")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(UserProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<UserProfileDto>> GetPublicProfile(long id)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            var profile = await _userService.GetPublicProfileAsync(id, currentUserId);
+            return Ok(profile);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]

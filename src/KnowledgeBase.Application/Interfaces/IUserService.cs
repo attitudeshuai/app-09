@@ -14,5 +14,6 @@ public interface IUserService
     Task<bool> UsernameExistsAsync(string username);
     Task<bool> EmailExistsAsync(string email);
     Task<UserProfileDto> GetProfileAsync(long userId);
+    Task<UserProfileDto> GetPublicProfileAsync(long userId, long currentUserId);
     Task UpdateProfileAsync(long userId, UpdateProfileRequest request);
 }
