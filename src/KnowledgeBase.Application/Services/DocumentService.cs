@@ -269,6 +269,149 @@ public class DocumentService : IDocumentService
         return publishedCount;
     }
 
+    public async Task<BatchOperationResult> BatchUpdateStatusAsync(List<long> ids, int status, long currentUserId)
+    {
+        var result = new BatchOperationResult();
+
+        if (ids == null || ids.Count == 0)
+        {
+            return result;
+        }
+
+        var targetStatus = (DocumentStatus)status;
+
+        foreach (var id in ids)
+        {
+            try
+            {
+                var document = await _unitOfWork.Documents.GetByIdAsync(id);
+                if (document == null)
+                {
+                    result.Failures.Add(new BatchFailureItem { Id = id, Message = "文档不存在" });
+                    result.FailureCount++;
+                    continue;
+                }
+
+                document.Status = targetStatus;
+                if (targetStatus != DocumentStatus.Scheduled)
+                {
+                    document.PublishTime = null;
+                    document.ScheduledBy = null;
+                }
+                document.UpdatedBy = currentUserId;
+
+                await _unitOfWork.Documents.UpdateAsync(document);
+                result.SuccessIds.Add(id);
+                result.SuccessCount++;
+            }
+            catch (Exception ex)
+            {
+                result.Failures.Add(new BatchFailureItem { Id = id, Message = ex.Message });
+                result.FailureCount++;
+            }
+        }
+
+        if (result.SuccessCount > 0)
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        return result;
+    }
+
+    public async Task<BatchOperationResult> BatchMoveCategoryAsync(List<long> ids, long categoryId, long currentUserId)
+    {
+        var result = new BatchOperationResult();
+
+        if (ids == null || ids.Count == 0)
+        {
+            return result;
+        }
+
+        if (!await _unitOfWork.Categories.ExistsAsync(categoryId))
+        {
+            foreach (var id in ids)
+            {
+                result.Failures.Add(new BatchFailureItem { Id = id, Message = "目标分类不存在" });
+                result.FailureCount++;
+            }
+            return result;
+        }
+
+        foreach (var id in ids)
+        {
+            try
+            {
+                var document = await _unitOfWork.Documents.GetByIdAsync(id);
+                if (document == null)
+                {
+                    result.Failures.Add(new BatchFailureItem { Id = id, Message = "文档不存在" });
+                    result.FailureCount++;
+                    continue;
+                }
+
+                document.CategoryId = categoryId;
+                document.UpdatedBy = currentUserId;
+
+                await _unitOfWork.Documents.UpdateAsync(document);
+                result.SuccessIds.Add(id);
+                result.SuccessCount++;
+            }
+            catch (Exception ex)
+            {
+                result.Failures.Add(new BatchFailureItem { Id = id, Message = ex.Message });
+                result.FailureCount++;
+            }
+        }
+
+        if (result.SuccessCount > 0)
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        return result;
+    }
+
+    public async Task<BatchOperationResult> BatchDeleteAsync(List<long> ids)
+    {
+        var result = new BatchOperationResult();
+
+        if (ids == null || ids.Count == 0)
+        {
+            return result;
+        }
+
+        foreach (var id in ids)
+        {
+            try
+            {
+                if (!await _unitOfWork.Documents.ExistsAsync(id))
+                {
+                    result.Failures.Add(new BatchFailureItem { Id = id, Message = "文档不存在" });
+                    result.FailureCount++;
+                    continue;
+                }
+
+                await _unitOfWork.Documents.DeleteAsync(id);
+                result.SuccessIds.Add(id);
+                result.SuccessCount++;
+                await _likeService.ClearCacheByDocumentIdAsync(id);
+            }
+            catch (Exception ex)
+            {
+                result.Failures.Add(new BatchFailureItem { Id = id, Message = ex.Message });
+                result.FailureCount++;
+            }
+        }
+
+        if (result.SuccessCount > 0)
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        return result;
+    }
+
     private static DocumentDto MapToDto(Document document, bool isFavorited = false, bool isLiked = false)
     {
         return new DocumentDto

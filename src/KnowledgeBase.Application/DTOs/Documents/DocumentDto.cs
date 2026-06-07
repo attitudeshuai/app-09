@@ -73,3 +73,34 @@ public class DocumentPagedRequest
     public long? CategoryId { get; set; }
     public int? Status { get; set; }
 }
+
+public class BatchOperationResult
+{
+    public int SuccessCount { get; set; }
+    public int FailureCount { get; set; }
+    public List<long> SuccessIds { get; set; } = new();
+    public List<BatchFailureItem> Failures { get; set; } = new();
+}
+
+public class BatchFailureItem
+{
+    public long Id { get; set; }
+    public string Message { get; set; } = string.Empty;
+}
+
+public class BatchUpdateStatusRequest
+{
+    public List<long> Ids { get; set; } = new();
+    public int Status { get; set; }
+}
+
+public class BatchMoveCategoryRequest
+{
+    public List<long> Ids { get; set; } = new();
+    public long CategoryId { get; set; }
+}
+
+public class BatchDeleteRequest
+{
+    public List<long> Ids { get; set; } = new();
+}

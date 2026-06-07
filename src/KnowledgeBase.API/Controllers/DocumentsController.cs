@@ -184,6 +184,53 @@ public class DocumentsController : ControllerBase
         }
     }
 
+    [HttpPost("batch/status")]
+    [Authorize(Policy = "EditorOrAdmin")]
+    [ProducesResponseType(typeof(BatchOperationResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BatchOperationResult>> BatchUpdateStatus([FromBody] BatchUpdateStatusRequest request)
+    {
+        if (request.Ids == null || request.Ids.Count == 0)
+        {
+            return BadRequest(new { message = "请选择要操作的文档" });
+        }
+
+        var currentUserId = GetCurrentUserId();
+        var result = await _documentService.BatchUpdateStatusAsync(request.Ids, request.Status, currentUserId);
+        return Ok(result);
+    }
+
+    [HttpPost("batch/category")]
+    [Authorize(Policy = "EditorOrAdmin")]
+    [ProducesResponseType(typeof(BatchOperationResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BatchOperationResult>> BatchMoveCategory([FromBody] BatchMoveCategoryRequest request)
+    {
+        if (request.Ids == null || request.Ids.Count == 0)
+        {
+            return BadRequest(new { message = "请选择要操作的文档" });
+        }
+
+        var currentUserId = GetCurrentUserId();
+        var result = await _documentService.BatchMoveCategoryAsync(request.Ids, request.CategoryId, currentUserId);
+        return Ok(result);
+    }
+
+    [HttpPost("batch/delete")]
+    [Authorize(Policy = "EditorOrAdmin")]
+    [ProducesResponseType(typeof(BatchOperationResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BatchOperationResult>> BatchDelete([FromBody] BatchDeleteRequest request)
+    {
+        if (request.Ids == null || request.Ids.Count == 0)
+        {
+            return BadRequest(new { message = "请选择要删除的文档" });
+        }
+
+        var result = await _documentService.BatchDeleteAsync(request.Ids);
+        return Ok(result);
+    }
+
     private long GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

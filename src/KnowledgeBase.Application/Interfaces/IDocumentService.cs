@@ -14,4 +14,7 @@ public interface IDocumentService
     Task IncrementViewCountAsync(long id);
     Task UpdateStatusAsync(long id, int status, long currentUserId);
     Task<int> PublishScheduledDocumentsAsync();
+    Task<BatchOperationResult> BatchUpdateStatusAsync(List<long> ids, int status, long currentUserId);
+    Task<BatchOperationResult> BatchMoveCategoryAsync(List<long> ids, long categoryId, long currentUserId);
+    Task<BatchOperationResult> BatchDeleteAsync(List<long> ids);
 }
