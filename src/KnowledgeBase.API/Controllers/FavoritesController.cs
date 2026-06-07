@@ -1,6 +1,7 @@
 using KnowledgeBase.Application.DTOs.Common;
 using KnowledgeBase.Application.DTOs.Favorites;
 using KnowledgeBase.Application.Interfaces;
+using KnowledgeBase.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -27,12 +28,13 @@ public class FavoritesController : ControllerBase
         [FromQuery] int pageSize = 10)
     {
         var userId = GetCurrentUserId();
+        var userRole = GetCurrentUserRoleOrNull();
         var request = new FavoritePagedRequest
         {
             PageNumber = pageNumber,
             PageSize = pageSize
         };
-        var result = await _favoriteService.GetMyFavoritesAsync(userId, request);
+        var result = await _favoriteService.GetMyFavoritesAsync(userId, request, userRole);
         return Ok(result);
     }
 
@@ -53,12 +55,17 @@ public class FavoritesController : ControllerBase
         try
         {
             var userId = GetCurrentUserId();
-            await _favoriteService.AddFavoriteAsync(userId, documentId);
+            var userRole = GetCurrentUserRoleOrNull();
+            await _favoriteService.AddFavoriteAsync(userId, documentId, userRole);
             return NoContent();
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
         }
     }
 
@@ -75,5 +82,15 @@ public class FavoritesController : ControllerBase
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return long.Parse(userIdClaim ?? "0");
+    }
+
+    private UserRole? GetCurrentUserRoleOrNull()
+    {
+        var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (Enum.TryParse<UserRole>(roleClaim, out var role))
+        {
+            return role;
+        }
+        return null;
     }
 }

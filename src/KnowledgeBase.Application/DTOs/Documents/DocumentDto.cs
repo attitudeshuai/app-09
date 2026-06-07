@@ -10,6 +10,8 @@ public class DocumentDto
     public long CategoryId { get; set; }
     public string? CategoryName { get; set; }
     public int Status { get; set; }
+    public int Visibility { get; set; }
+    public string? AllowedRoles { get; set; }
     public int ViewCount { get; set; }
     public int LikeCount { get; set; }
     public int Version { get; set; }
@@ -32,6 +34,8 @@ public class DocumentListDto
     public long CategoryId { get; set; }
     public string? CategoryName { get; set; }
     public int Status { get; set; }
+    public int Visibility { get; set; }
+    public string? AllowedRoles { get; set; }
     public int ViewCount { get; set; }
     public int LikeCount { get; set; }
     public int Version { get; set; }
@@ -50,6 +54,8 @@ public class CreateDocumentRequest
     public string? Tags { get; set; }
     public long CategoryId { get; set; }
     public int Status { get; set; } = 1;
+    public int Visibility { get; set; } = 1;
+    public string? AllowedRoles { get; set; }
     public DateTime? PublishTime { get; set; }
 }
 
@@ -61,6 +67,8 @@ public class UpdateDocumentRequest
     public string? Tags { get; set; }
     public long CategoryId { get; set; }
     public int? Status { get; set; }
+    public int? Visibility { get; set; }
+    public string? AllowedRoles { get; set; }
     public DateTime? PublishTime { get; set; }
     public string? ChangeLog { get; set; }
 }
@@ -103,4 +111,17 @@ public class BatchMoveCategoryRequest
 public class BatchDeleteRequest
 {
     public List<long> Ids { get; set; } = new();
+}
+
+public class UpdateVisibilityRequest
+{
+    public int Visibility { get; set; }
+    public string? AllowedRoles { get; set; }
+}
+
+public class BatchUpdateVisibilityRequest
+{
+    public List<long> Ids { get; set; } = new();
+    public int Visibility { get; set; }
+    public string? AllowedRoles { get; set; }
 }

@@ -66,11 +66,14 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(d => d.Title);
             entity.HasIndex(d => d.Status);
+            entity.HasIndex(d => d.Visibility);
             entity.HasIndex(d => d.CategoryId);
             entity.Property(d => d.Title).HasMaxLength(200).IsRequired();
             entity.Property(d => d.Content).HasColumnType("longtext");
             entity.Property(d => d.Summary).HasMaxLength(500);
             entity.Property(d => d.Tags).HasMaxLength(500);
+            entity.Property(d => d.AllowedRoles).HasMaxLength(200);
+            entity.Property(d => d.Visibility).HasDefaultValue(DocumentVisibility.Public);
             entity.HasMany(d => d.Versions)
                   .WithOne(v => v.Document)
                   .HasForeignKey(v => v.DocumentId)

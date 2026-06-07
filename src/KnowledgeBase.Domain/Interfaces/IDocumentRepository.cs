@@ -9,12 +9,20 @@ public interface IDocumentRepository : IRepository<Document>
         int pageSize,
         string? keyword,
         long? categoryId,
-        DocumentStatus? status);
-    Task<IEnumerable<Document>> SearchAsync(string keyword, int pageNumber, int pageSize);
-    Task<int> SearchCountAsync(string keyword);
+        DocumentStatus? status,
+        bool applyVisibilityFilter = false,
+        bool isAuthenticated = false,
+        UserRole? userRole = null);
+    Task<IEnumerable<Document>> SearchAsync(string keyword, int pageNumber, int pageSize,
+        bool isAuthenticated = false,
+        UserRole? userRole = null);
+    Task<int> SearchCountAsync(string keyword,
+        bool isAuthenticated = false,
+        UserRole? userRole = null);
     Task IncrementViewCountAsync(long id);
     Task<IEnumerable<Document>> GetByCategoryIdAsync(long categoryId);
     Task<int> UpdateCategoryIdAsync(long sourceCategoryId, long targetCategoryId, long updatedBy);
     Task<IEnumerable<Document>> GetScheduledDocumentsToPublishAsync(DateTime now);
     Task<int> GetDocumentCountByUserIdAsync(long userId, DocumentStatus? status = null);
+    Task<bool> CanViewDocumentAsync(long documentId, bool isAuthenticated, UserRole? userRole);
 }

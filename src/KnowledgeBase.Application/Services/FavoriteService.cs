@@ -24,11 +24,26 @@ public class FavoriteService : IFavoriteService
         return await _unitOfWork.DocumentFavorites.IsFavoritedAsync(userId, documentId);
     }
 
-    public async Task AddFavoriteAsync(long userId, long documentId)
+    public async Task AddFavoriteAsync(long userId, long documentId, UserRole? userRole = null)
     {
         if (!await _unitOfWork.Documents.ExistsAsync(documentId))
         {
             throw new KeyNotFoundException("文档不存在");
+        }
+
+        var document = await _unitOfWork.Documents.GetByIdAsync(documentId);
+        if (document == null)
+        {
+            throw new KeyNotFoundException("文档不存在");
+        }
+
+        if (document.Status == DocumentStatus.Published)
+        {
+            var canView = await _unitOfWork.Documents.CanViewDocumentAsync(documentId, true, userRole);
+            if (!canView)
+            {
+                throw new UnauthorizedAccessException("无权收藏该文档");
+            }
         }
 
         if (await _unitOfWork.DocumentFavorites.IsFavoritedAsync(userId, documentId))
@@ -57,7 +72,7 @@ public class FavoriteService : IFavoriteService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<PagedResult<FavoriteDocumentDto>> GetMyFavoritesAsync(long userId, FavoritePagedRequest request)
+    public async Task<PagedResult<FavoriteDocumentDto>> GetMyFavoritesAsync(long userId, FavoritePagedRequest request, UserRole? userRole = null)
     {
         var (items, totalCount) = await _unitOfWork.DocumentFavorites.GetFavoritesByUserIdAsync(
             userId, request.PageNumber, request.PageSize);

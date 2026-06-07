@@ -60,7 +60,10 @@ public class DocumentRepository : IDocumentRepository
         int pageSize,
         string? keyword,
         long? categoryId,
-        DocumentStatus? status)
+        DocumentStatus? status,
+        bool applyVisibilityFilter = false,
+        bool isAuthenticated = false,
+        UserRole? userRole = null)
     {
         var query = _context.Documents.AsQueryable();
 
@@ -81,6 +84,11 @@ public class DocumentRepository : IDocumentRepository
             query = query.Where(d => d.Status == status.Value);
         }
 
+        if (applyVisibilityFilter)
+        {
+            query = ApplyVisibilityFilter(query, isAuthenticated, userRole);
+        }
+
         var totalCount = await query.CountAsync();
         var items = await query
             .Include(d => d.Category)
@@ -92,13 +100,19 @@ public class DocumentRepository : IDocumentRepository
         return (items, totalCount);
     }
 
-    public async Task<IEnumerable<Document>> SearchAsync(string keyword, int pageNumber, int pageSize)
+    public async Task<IEnumerable<Document>> SearchAsync(string keyword, int pageNumber, int pageSize,
+        bool isAuthenticated = false,
+        UserRole? userRole = null)
     {
-        return await _context.Documents
+        var query = _context.Documents
             .Where(d => d.Status == DocumentStatus.Published &&
                        (d.Title.Contains(keyword) ||
                         d.Content.Contains(keyword) ||
-                        (d.Tags != null && d.Tags.Contains(keyword))))
+                        (d.Tags != null && d.Tags.Contains(keyword))));
+
+        query = ApplyVisibilityFilter(query, isAuthenticated, userRole);
+
+        return await query
             .Include(d => d.Category)
             .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
@@ -106,13 +120,19 @@ public class DocumentRepository : IDocumentRepository
             .ToListAsync();
     }
 
-    public async Task<int> SearchCountAsync(string keyword)
+    public async Task<int> SearchCountAsync(string keyword,
+        bool isAuthenticated = false,
+        UserRole? userRole = null)
     {
-        return await _context.Documents
-            .CountAsync(d => d.Status == DocumentStatus.Published &&
+        var query = _context.Documents
+            .Where(d => d.Status == DocumentStatus.Published &&
                        (d.Title.Contains(keyword) ||
                         d.Content.Contains(keyword) ||
                         (d.Tags != null && d.Tags.Contains(keyword))));
+
+        query = ApplyVisibilityFilter(query, isAuthenticated, userRole);
+
+        return await query.CountAsync();
     }
 
     public async Task IncrementViewCountAsync(long id)
@@ -163,5 +183,38 @@ public class DocumentRepository : IDocumentRepository
         }
 
         return await query.CountAsync();
+    }
+
+    public async Task<bool> CanViewDocumentAsync(long documentId, bool isAuthenticated, UserRole? userRole)
+    {
+        var query = _context.Documents.Where(d => d.Id == documentId && d.Status == DocumentStatus.Published);
+        query = ApplyVisibilityFilter(query, isAuthenticated, userRole);
+        return await query.AnyAsync();
+    }
+
+    private static IQueryable<Document> ApplyVisibilityFilter(IQueryable<Document> query, bool isAuthenticated, UserRole? userRole)
+    {
+        if (!isAuthenticated)
+        {
+            query = query.Where(d => d.Visibility == DocumentVisibility.Public);
+        }
+        else if (userRole.HasValue)
+        {
+            var roleName = userRole.Value.ToString();
+            query = query.Where(d =>
+                d.Visibility == DocumentVisibility.Public ||
+                d.Visibility == DocumentVisibility.AuthenticatedUsers ||
+                (d.Visibility == DocumentVisibility.RoleSpecific &&
+                 d.AllowedRoles != null &&
+                 d.AllowedRoles.Contains(roleName)));
+        }
+        else
+        {
+            query = query.Where(d =>
+                d.Visibility == DocumentVisibility.Public ||
+                d.Visibility == DocumentVisibility.AuthenticatedUsers);
+        }
+
+        return query;
     }
 }

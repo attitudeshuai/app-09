@@ -40,8 +40,23 @@ public class LikeService : ILikeService
         return isLiked;
     }
 
-    public async Task<int> GetLikeCountAsync(long documentId)
+    public async Task<int> GetLikeCountAsync(long documentId, bool isAuthenticated = false, UserRole? userRole = null)
     {
+        var document = await _unitOfWork.Documents.GetByIdAsync(documentId);
+        if (document == null)
+        {
+            throw new KeyNotFoundException("文档不存在");
+        }
+
+        if (document.Status == DocumentStatus.Published)
+        {
+            var canView = await _unitOfWork.Documents.CanViewDocumentAsync(documentId, isAuthenticated, userRole);
+            if (!canView)
+            {
+                throw new UnauthorizedAccessException("无权查看该文档的点赞数");
+            }
+        }
+
         var cacheKey = GetLikeCountCacheKey(documentId);
         var cached = await _cacheService.GetAsync<int?>(cacheKey);
         if (cached.HasValue)
@@ -54,10 +69,25 @@ public class LikeService : ILikeService
         return count;
     }
 
-    public async Task<LikeStatusDto> GetLikeStatusAsync(long userId, long documentId)
+    public async Task<LikeStatusDto> GetLikeStatusAsync(long userId, long documentId, bool isAuthenticated = false, UserRole? userRole = null)
     {
+        var document = await _unitOfWork.Documents.GetByIdAsync(documentId);
+        if (document == null)
+        {
+            throw new KeyNotFoundException("文档不存在");
+        }
+
+        if (document.Status == DocumentStatus.Published)
+        {
+            var canView = await _unitOfWork.Documents.CanViewDocumentAsync(documentId, isAuthenticated, userRole);
+            if (!canView)
+            {
+                throw new UnauthorizedAccessException("无权查看该文档的点赞状态");
+            }
+        }
+
         var isLiked = await IsLikedAsync(userId, documentId);
-        var likeCount = await GetLikeCountAsync(documentId);
+        var likeCount = await GetLikeCountAsync(documentId, isAuthenticated, userRole);
 
         return new LikeStatusDto
         {
@@ -67,7 +97,7 @@ public class LikeService : ILikeService
         };
     }
 
-    public async Task<LikeStatusDto> ToggleLikeAsync(long userId, long documentId)
+    public async Task<LikeStatusDto> ToggleLikeAsync(long userId, long documentId, UserRole? userRole = null)
     {
         var document = await _unitOfWork.Documents.GetByIdAsync(documentId);
         if (document == null)
@@ -78,6 +108,12 @@ public class LikeService : ILikeService
         if (document.Status != DocumentStatus.Published)
         {
             throw new InvalidOperationException("只能对已发布的文档点赞");
+        }
+
+        var canView = await _unitOfWork.Documents.CanViewDocumentAsync(documentId, true, userRole);
+        if (!canView)
+        {
+            throw new UnauthorizedAccessException("无权对该文档点赞");
         }
 
         var isLiked = await _unitOfWork.DocumentLikes.IsLikedAsync(userId, documentId);

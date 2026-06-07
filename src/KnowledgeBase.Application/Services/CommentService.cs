@@ -15,8 +15,23 @@ public class CommentService : ICommentService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<PagedResult<CommentDto>> GetPagedByDocumentIdAsync(long documentId, CommentPagedRequest request)
+    public async Task<PagedResult<CommentDto>> GetPagedByDocumentIdAsync(long documentId, CommentPagedRequest request, bool isAuthenticated = false, UserRole? userRole = null)
     {
+        var document = await _unitOfWork.Documents.GetByIdAsync(documentId);
+        if (document == null)
+        {
+            throw new KeyNotFoundException("文档不存在");
+        }
+
+        if (document.Status == DocumentStatus.Published)
+        {
+            var canView = await _unitOfWork.Documents.CanViewDocumentAsync(documentId, isAuthenticated, userRole);
+            if (!canView)
+            {
+                throw new UnauthorizedAccessException("无权查看该文档的评论");
+            }
+        }
+
         var sortDescending = request.SortOrder == CommentSortOrder.Desc;
 
         var (rootComments, totalCount) = await _unitOfWork.DocumentComments.GetPagedByDocumentIdAsync(
@@ -41,7 +56,7 @@ public class CommentService : ICommentService
         };
     }
 
-    public async Task<CommentDto> CreateAsync(CreateCommentRequest request, long userId)
+    public async Task<CommentDto> CreateAsync(CreateCommentRequest request, long userId, UserRole? userRole = null)
     {
         if (string.IsNullOrWhiteSpace(request.Content))
         {
@@ -57,6 +72,12 @@ public class CommentService : ICommentService
         if (document.Status != DocumentStatus.Published)
         {
             throw new InvalidOperationException("只有已发布的文档才能发表评论");
+        }
+
+        var canView = await _unitOfWork.Documents.CanViewDocumentAsync(request.DocumentId, true, userRole);
+        if (!canView)
+        {
+            throw new UnauthorizedAccessException("无权评论该文档");
         }
 
         long? parentId = null;
@@ -107,8 +128,23 @@ public class CommentService : ICommentService
         return MapToCommentDto(createdComment!);
     }
 
-    public async Task<int> GetCountByDocumentIdAsync(long documentId)
+    public async Task<int> GetCountByDocumentIdAsync(long documentId, bool isAuthenticated = false, UserRole? userRole = null)
     {
+        var document = await _unitOfWork.Documents.GetByIdAsync(documentId);
+        if (document == null)
+        {
+            throw new KeyNotFoundException("文档不存在");
+        }
+
+        if (document.Status == DocumentStatus.Published)
+        {
+            var canView = await _unitOfWork.Documents.CanViewDocumentAsync(documentId, isAuthenticated, userRole);
+            if (!canView)
+            {
+                throw new UnauthorizedAccessException("无权查看该文档的评论数");
+            }
+        }
+
         return await _unitOfWork.DocumentComments.CountByDocumentIdAsync(documentId);
     }
 

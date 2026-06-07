@@ -18,12 +18,22 @@ public class DocumentService : IDocumentService
         _likeService = likeService;
     }
 
-    public async Task<DocumentDto> GetByIdAsync(long id, long? userId = null)
+    public async Task<DocumentDto> GetByIdAsync(long id, long? userId = null, UserRole? userRole = null)
     {
         var document = await _unitOfWork.Documents.GetByIdAsync(id);
         if (document == null)
         {
             throw new KeyNotFoundException("文档不存在");
+        }
+
+        if (document.Status == DocumentStatus.Published)
+        {
+            var isAuthenticated = userId.HasValue && userId.Value > 0;
+            var canView = await _unitOfWork.Documents.CanViewDocumentAsync(id, isAuthenticated, userRole);
+            if (!canView)
+            {
+                throw new UnauthorizedAccessException("无权查看该文档");
+            }
         }
 
         var isFavorited = userId.HasValue && userId.Value > 0
@@ -37,11 +47,13 @@ public class DocumentService : IDocumentService
         return MapToDto(document, isFavorited, isLiked);
     }
 
-    public async Task<PagedResult<DocumentListDto>> GetPagedAsync(DocumentPagedRequest request, long? userId = null)
+    public async Task<PagedResult<DocumentListDto>> GetPagedAsync(DocumentPagedRequest request, long? userId = null, UserRole? userRole = null, bool applyVisibilityFilter = false)
     {
         DocumentStatus? status = request.Status.HasValue ? (DocumentStatus?)request.Status.Value : null;
+        var isAuthenticated = userId.HasValue && userId.Value > 0;
         var (items, totalCount) = await _unitOfWork.Documents.GetPagedAsync(
-            request.PageNumber, request.PageSize, request.Keyword, request.CategoryId, status);
+            request.PageNumber, request.PageSize, request.Keyword, request.CategoryId, status,
+            applyVisibilityFilter, isAuthenticated, userRole);
 
         var favoritedIds = userId.HasValue && userId.Value > 0
             ? await _unitOfWork.DocumentFavorites.GetFavoritedDocumentIdsAsync(userId.Value, items.Select(d => d.Id))
@@ -60,7 +72,7 @@ public class DocumentService : IDocumentService
         };
     }
 
-    public async Task<PagedResult<DocumentListDto>> SearchAsync(string keyword, int pageNumber, int pageSize, long? userId = null)
+    public async Task<PagedResult<DocumentListDto>> SearchAsync(string keyword, int pageNumber, int pageSize, long? userId = null, UserRole? userRole = null)
     {
         if (string.IsNullOrWhiteSpace(keyword))
         {
@@ -73,8 +85,9 @@ public class DocumentService : IDocumentService
             };
         }
 
-        var items = await _unitOfWork.Documents.SearchAsync(keyword, pageNumber, pageSize);
-        var totalCount = await _unitOfWork.Documents.SearchCountAsync(keyword);
+        var isAuthenticated = userId.HasValue && userId.Value > 0;
+        var items = await _unitOfWork.Documents.SearchAsync(keyword, pageNumber, pageSize, isAuthenticated, userRole);
+        var totalCount = await _unitOfWork.Documents.SearchCountAsync(keyword, isAuthenticated, userRole);
 
         var favoritedIds = userId.HasValue && userId.Value > 0
             ? await _unitOfWork.DocumentFavorites.GetFavoritedDocumentIdsAsync(userId.Value, items.Select(d => d.Id))
@@ -114,6 +127,8 @@ public class DocumentService : IDocumentService
             Tags = request.Tags,
             CategoryId = request.CategoryId,
             Status = status,
+            Visibility = (DocumentVisibility)request.Visibility,
+            AllowedRoles = request.AllowedRoles,
             PublishTime = request.PublishTime,
             ScheduledBy = status == DocumentStatus.Scheduled ? currentUserId : null,
             ViewCount = 0,
@@ -200,6 +215,12 @@ public class DocumentService : IDocumentService
             }
         }
 
+        if (request.Visibility.HasValue)
+        {
+            document.Visibility = (DocumentVisibility)request.Visibility.Value;
+            document.AllowedRoles = request.AllowedRoles;
+        }
+
         document.Version++;
         document.UpdatedBy = currentUserId;
 
@@ -241,6 +262,22 @@ public class DocumentService : IDocumentService
             document.PublishTime = null;
             document.ScheduledBy = null;
         }
+        document.UpdatedBy = currentUserId;
+
+        await _unitOfWork.Documents.UpdateAsync(document);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task UpdateVisibilityAsync(long id, UpdateVisibilityRequest request, long currentUserId)
+    {
+        var document = await _unitOfWork.Documents.GetByIdAsync(id);
+        if (document == null)
+        {
+            throw new KeyNotFoundException("文档不存在");
+        }
+
+        document.Visibility = (DocumentVisibility)request.Visibility;
+        document.AllowedRoles = request.AllowedRoles;
         document.UpdatedBy = currentUserId;
 
         await _unitOfWork.Documents.UpdateAsync(document);
@@ -298,6 +335,52 @@ public class DocumentService : IDocumentService
                     document.PublishTime = null;
                     document.ScheduledBy = null;
                 }
+                document.UpdatedBy = currentUserId;
+
+                await _unitOfWork.Documents.UpdateAsync(document);
+                result.SuccessIds.Add(id);
+                result.SuccessCount++;
+            }
+            catch (Exception ex)
+            {
+                result.Failures.Add(new BatchFailureItem { Id = id, Message = ex.Message });
+                result.FailureCount++;
+            }
+        }
+
+        if (result.SuccessCount > 0)
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        return result;
+    }
+
+    public async Task<BatchOperationResult> BatchUpdateVisibilityAsync(List<long> ids, UpdateVisibilityRequest request, long currentUserId)
+    {
+        var result = new BatchOperationResult();
+
+        if (ids == null || ids.Count == 0)
+        {
+            return result;
+        }
+
+        var targetVisibility = (DocumentVisibility)request.Visibility;
+
+        foreach (var id in ids)
+        {
+            try
+            {
+                var document = await _unitOfWork.Documents.GetByIdAsync(id);
+                if (document == null)
+                {
+                    result.Failures.Add(new BatchFailureItem { Id = id, Message = "文档不存在" });
+                    result.FailureCount++;
+                    continue;
+                }
+
+                document.Visibility = targetVisibility;
+                document.AllowedRoles = request.AllowedRoles;
                 document.UpdatedBy = currentUserId;
 
                 await _unitOfWork.Documents.UpdateAsync(document);
@@ -424,6 +507,8 @@ public class DocumentService : IDocumentService
             CategoryId = document.CategoryId,
             CategoryName = document.Category?.Name,
             Status = (int)document.Status,
+            Visibility = (int)document.Visibility,
+            AllowedRoles = document.AllowedRoles,
             ViewCount = document.ViewCount,
             LikeCount = document.LikeCount,
             Version = document.Version,
@@ -449,6 +534,8 @@ public class DocumentService : IDocumentService
             CategoryId = document.CategoryId,
             CategoryName = document.Category?.Name,
             Status = (int)document.Status,
+            Visibility = (int)document.Visibility,
+            AllowedRoles = document.AllowedRoles,
             ViewCount = document.ViewCount,
             LikeCount = document.LikeCount,
             Version = document.Version,

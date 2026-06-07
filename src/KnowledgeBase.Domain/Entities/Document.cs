@@ -9,6 +9,8 @@ public class Document : BaseEntity
     public long CategoryId { get; set; }
     public Category? Category { get; set; }
     public DocumentStatus Status { get; set; } = DocumentStatus.Draft;
+    public DocumentVisibility Visibility { get; set; } = DocumentVisibility.Public;
+    public string? AllowedRoles { get; set; }
     public int ViewCount { get; set; }
     public int LikeCount { get; set; }
     public int Version { get; set; } = 1;

@@ -1,6 +1,7 @@
 using KnowledgeBase.Application.DTOs.Common;
 using KnowledgeBase.Application.DTOs.Documents;
 using KnowledgeBase.Application.Interfaces;
+using KnowledgeBase.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,7 +49,9 @@ public class DocumentsController : ControllerBase
             Status = status
         };
         var userId = GetCurrentUserIdOrNull();
-        var result = await _documentService.GetPagedAsync(request, userId);
+        var userRole = GetCurrentUserRoleOrNull();
+        var applyVisibilityFilter = !status.HasValue || status.Value == (int)DocumentStatus.Published;
+        var result = await _documentService.GetPagedAsync(request, userId, userRole, applyVisibilityFilter);
         return Ok(result);
     }
 
@@ -61,7 +64,8 @@ public class DocumentsController : ControllerBase
         [FromQuery] int pageSize = 10)
     {
         var userId = GetCurrentUserIdOrNull();
-        var result = await _documentService.SearchAsync(keyword, pageNumber, pageSize, userId);
+        var userRole = GetCurrentUserRoleOrNull();
+        var result = await _documentService.SearchAsync(keyword, pageNumber, pageSize, userId, userRole);
         return Ok(result);
     }
 
@@ -74,7 +78,8 @@ public class DocumentsController : ControllerBase
         try
         {
             var userId = GetCurrentUserIdOrNull();
-            var document = await _documentService.GetByIdAsync(id, userId);
+            var userRole = GetCurrentUserRoleOrNull();
+            var document = await _documentService.GetByIdAsync(id, userId, userRole);
             
             if (userId.HasValue && userId.Value > 0)
             {
@@ -86,6 +91,10 @@ public class DocumentsController : ControllerBase
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
         }
     }
 
@@ -184,6 +193,24 @@ public class DocumentsController : ControllerBase
         }
     }
 
+    [HttpPatch("{id}/visibility")]
+    [Authorize(Policy = "EditorOrAdmin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateVisibility(long id, [FromBody] UpdateVisibilityRequest request)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            await _documentService.UpdateVisibilityAsync(id, request, currentUserId);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("batch/status")]
     [Authorize(Policy = "EditorOrAdmin")]
     [ProducesResponseType(typeof(BatchOperationResult), StatusCodes.Status200OK)]
@@ -197,6 +224,27 @@ public class DocumentsController : ControllerBase
 
         var currentUserId = GetCurrentUserId();
         var result = await _documentService.BatchUpdateStatusAsync(request.Ids, request.Status, currentUserId);
+        return Ok(result);
+    }
+
+    [HttpPost("batch/visibility")]
+    [Authorize(Policy = "EditorOrAdmin")]
+    [ProducesResponseType(typeof(BatchOperationResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BatchOperationResult>> BatchUpdateVisibility([FromBody] BatchUpdateVisibilityRequest request)
+    {
+        if (request.Ids == null || request.Ids.Count == 0)
+        {
+            return BadRequest(new { message = "请选择要操作的文档" });
+        }
+
+        var currentUserId = GetCurrentUserId();
+        var visibilityRequest = new UpdateVisibilityRequest
+        {
+            Visibility = request.Visibility,
+            AllowedRoles = request.AllowedRoles
+        };
+        var result = await _documentService.BatchUpdateVisibilityAsync(request.Ids, visibilityRequest, currentUserId);
         return Ok(result);
     }
 
@@ -243,6 +291,16 @@ public class DocumentsController : ControllerBase
         if (long.TryParse(userIdClaim, out var userId) && userId > 0)
         {
             return userId;
+        }
+        return null;
+    }
+
+    private UserRole? GetCurrentUserRoleOrNull()
+    {
+        var roleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (Enum.TryParse<UserRole>(roleClaim, out var role))
+        {
+            return role;
         }
         return null;
     }
