@@ -614,7 +614,6 @@
       "KnowledgeBase.Application/1.0.0": {
         "dependencies": {
           "KnowledgeBase.Domain": "1.0.0",
-          "Microsoft.EntityFrameworkCore": "7.0.2",
           "Microsoft.Extensions.Configuration": "7.0.0",
           "Microsoft.Extensions.DependencyInjection": "7.0.0",
           "Microsoft.Extensions.Logging.Abstractions": "7.0.0",

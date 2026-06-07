@@ -15,23 +15,10 @@ public class DocumentViewHistoryRepository : IDocumentViewHistoryRepository
 
     public async Task AddOrUpdateAsync(long userId, long documentId)
     {
-        var history = await _context.DocumentViewHistories
-            .FirstOrDefaultAsync(h => h.UserId == userId && h.DocumentId == documentId);
+        var viewedAt = DateTime.UtcNow;
 
-        if (history != null)
-        {
-            history.ViewedAt = DateTime.UtcNow;
-        }
-        else
-        {
-            history = new DocumentViewHistory
-            {
-                UserId = userId,
-                DocumentId = documentId,
-                ViewedAt = DateTime.UtcNow
-            };
-            await _context.DocumentViewHistories.AddAsync(history);
-        }
+        await _context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO DocumentViewHistories (UserId, DocumentId, ViewedAt) VALUES ({userId}, {documentId}, {viewedAt}) ON DUPLICATE KEY UPDATE ViewedAt = {viewedAt}");
     }
 
     public async Task<DocumentViewHistory?> GetByUserAndDocumentAsync(long userId, long documentId)
