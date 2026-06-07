@@ -140,21 +140,20 @@ public class CategoryService : ICategoryService
             throw new InvalidOperationException("源分类和目标分类不能相同");
         }
 
-        var allCategories = (await _unitOfWork.Categories.GetAllAsync()).ToList();
-
-        var sourceCategory = allCategories.FirstOrDefault(c => c.Id == sourceCategoryId);
+        var sourceCategory = await _unitOfWork.Categories.GetByIdAsync(sourceCategoryId);
         if (sourceCategory == null)
         {
             throw new KeyNotFoundException("源分类不存在");
         }
 
-        var targetCategory = allCategories.FirstOrDefault(c => c.Id == targetCategoryId);
+        var targetCategory = await _unitOfWork.Categories.GetByIdAsync(targetCategoryId);
         if (targetCategory == null)
         {
             throw new KeyNotFoundException("目标分类不存在");
         }
 
-        if (IsDescendant(allCategories, targetCategoryId, sourceCategoryId))
+        var isDescendant = await _unitOfWork.Categories.IsDescendantAsync(targetCategoryId, sourceCategoryId);
+        if (isDescendant)
         {
             throw new InvalidOperationException("不能将文档迁移到源分类的子分类下");
         }
@@ -167,7 +166,7 @@ public class CategoryService : ICategoryService
                 targetCategoryId,
                 currentUserId);
 
-            await _unitOfWork.CommitTransactionAsync();
+            await transaction.CommitAsync();
 
             await RemoveCacheWithRetryAsync();
 
@@ -180,44 +179,9 @@ public class CategoryService : ICategoryService
         }
         catch
         {
-            await _unitOfWork.RollbackTransactionAsync();
+            await transaction.RollbackAsync();
             throw;
         }
-    }
-
-    private static bool IsDescendant(List<Category> allCategories, long categoryId, long ancestorId)
-    {
-        var currentId = categoryId;
-        var visited = new HashSet<long>();
-
-        while (currentId != 0)
-        {
-            if (visited.Contains(currentId))
-            {
-                return false;
-            }
-            visited.Add(currentId);
-
-            var category = allCategories.FirstOrDefault(c => c.Id == currentId);
-            if (category == null)
-            {
-                return false;
-            }
-
-            if (category.ParentId == ancestorId)
-            {
-                return true;
-            }
-
-            if (!category.ParentId.HasValue)
-            {
-                return false;
-            }
-
-            currentId = category.ParentId.Value;
-        }
-
-        return false;
     }
 
     private async Task RemoveCacheWithRetryAsync()

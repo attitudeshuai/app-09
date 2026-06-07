@@ -98,4 +98,43 @@ public class CategoryRepository : ICategoryRepository
     {
         return await _context.Categories.AnyAsync(c => c.ParentId == id);
     }
+
+    public async Task<bool> IsDescendantAsync(long categoryId, long ancestorId)
+    {
+        var currentId = categoryId;
+        var visited = new HashSet<long>();
+
+        while (currentId != 0)
+        {
+            if (visited.Contains(currentId))
+            {
+                return false;
+            }
+            visited.Add(currentId);
+
+            var category = await _context.Categories
+                .Where(c => c.Id == currentId)
+                .Select(c => new { c.ParentId })
+                .FirstOrDefaultAsync();
+
+            if (category == null)
+            {
+                return false;
+            }
+
+            if (category.ParentId == ancestorId)
+            {
+                return true;
+            }
+
+            if (!category.ParentId.HasValue)
+            {
+                return false;
+            }
+
+            currentId = category.ParentId.Value;
+        }
+
+        return false;
+    }
 }

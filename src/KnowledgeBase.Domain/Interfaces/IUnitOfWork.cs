@@ -1,5 +1,3 @@
-using System.Data;
-
 namespace KnowledgeBase.Domain.Interfaces;
 
 public interface IUnitOfWork : IDisposable
@@ -12,7 +10,5 @@ public interface IUnitOfWork : IDisposable
     IDocumentCommentRepository DocumentComments { get; }
     IDocumentViewHistoryRepository DocumentViewHistories { get; }
     Task<int> SaveChangesAsync();
-    Task<IDbTransaction> BeginTransactionAsync();
-    Task CommitTransactionAsync();
-    Task RollbackTransactionAsync();
+    Task<ITransaction> BeginTransactionAsync();
 }
