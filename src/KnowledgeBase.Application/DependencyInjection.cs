@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<IStatisticsService, StatisticsService>();
         services.AddScoped<IFavoriteService, FavoriteService>();
         services.AddScoped<ICommentService, CommentService>();
+        services.AddScoped<IViewHistoryService, ViewHistoryService>();
 
         return services;
     }

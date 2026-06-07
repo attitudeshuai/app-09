@@ -3,6 +3,8 @@ using KnowledgeBase.Domain.Interfaces;
 using KnowledgeBase.Infrastructure.Caching;
 using KnowledgeBase.Infrastructure.Data;
 using KnowledgeBase.Infrastructure.Security;
+using KnowledgeBase.Infrastructure.Services;
+using KnowledgeBase.Application.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +30,9 @@ public static class DependencyInjection
         services.AddScoped<IRedisCacheService, RedisCacheService>();
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.Configure<ViewHistoryOptions>(configuration.GetSection(ViewHistoryOptions.SectionName));
+        services.AddHostedService<ViewHistoryCleanupService>();
 
         return services;
     }

@@ -14,10 +14,12 @@ namespace KnowledgeBase.API.Controllers;
 public class DocumentsController : ControllerBase
 {
     private readonly IDocumentService _documentService;
+    private readonly IViewHistoryService _viewHistoryService;
 
-    public DocumentsController(IDocumentService documentService)
+    public DocumentsController(IDocumentService documentService, IViewHistoryService viewHistoryService)
     {
         _documentService = documentService;
+        _viewHistoryService = viewHistoryService;
     }
 
     [HttpGet]
@@ -66,6 +68,12 @@ public class DocumentsController : ControllerBase
         {
             var userId = GetCurrentUserIdOrNull();
             var document = await _documentService.GetByIdAsync(id, userId);
+            
+            if (userId.HasValue && userId.Value > 0)
+            {
+                _ = _viewHistoryService.RecordViewAsync(userId.Value, id);
+            }
+            
             return Ok(document);
         }
         catch (KeyNotFoundException ex)

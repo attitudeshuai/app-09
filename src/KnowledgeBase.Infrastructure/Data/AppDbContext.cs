@@ -15,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<DocumentVersion> DocumentVersions { get; set; }
     public DbSet<DocumentFavorite> DocumentFavorites { get; set; }
     public DbSet<DocumentComment> DocumentComments { get; set; }
+    public DbSet<DocumentViewHistory> DocumentViewHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -100,6 +101,22 @@ public class AppDbContext : DbContext
             entity.HasOne(c => c.Document)
                   .WithMany()
                   .HasForeignKey(c => c.DocumentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<DocumentViewHistory>(entity =>
+        {
+            entity.HasKey(h => new { h.UserId, h.DocumentId });
+            entity.HasIndex(h => h.UserId);
+            entity.HasIndex(h => h.DocumentId);
+            entity.HasIndex(h => h.ViewedAt);
+            entity.HasOne(h => h.User)
+                  .WithMany()
+                  .HasForeignKey(h => h.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(h => h.Document)
+                  .WithMany()
+                  .HasForeignKey(h => h.DocumentId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }

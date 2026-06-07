@@ -281,6 +281,50 @@ namespace KnowledgeBase.Infrastructure.Migrations
 
                     b.Navigation("Document");
                 });
+
+            modelBuilder.Entity("KnowledgeBase.Domain.Entities.DocumentViewHistory", b =>
+                {
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DocumentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("ViewedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("UserId", "DocumentId");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ViewedAt");
+
+                    b.ToTable("DocumentViewHistories", (string)null);
+                });
+
+            modelBuilder.Entity("KnowledgeBase.Domain.Entities.DocumentViewHistory", b =>
+                {
+                    b.HasOne("KnowledgeBase.Domain.Entities.Document", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("FK_DocumentViewHistories_Documents_DocumentId");
+
+                    b.Navigation("Document");
+                });
+
+            modelBuilder.Entity("KnowledgeBase.Domain.Entities.DocumentViewHistory", b =>
+                {
+                    b.HasOne("KnowledgeBase.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("FK_DocumentViewHistories_Users_UserId");
+
+                    b.Navigation("User");
+                });
 #pragma warning restore 612, 618
         }
     }
