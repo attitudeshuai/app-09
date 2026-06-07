@@ -117,6 +117,32 @@ public class CategoriesController : ControllerBase
         }
     }
 
+    [HttpPost("migrate-documents")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(MigrateDocumentsResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<MigrateDocumentsResult>> MigrateDocuments([FromBody] MigrateDocumentsRequest request)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            var result = await _categoryService.MigrateDocumentsAsync(
+                request.SourceCategoryId,
+                request.TargetCategoryId,
+                currentUserId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     private long GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

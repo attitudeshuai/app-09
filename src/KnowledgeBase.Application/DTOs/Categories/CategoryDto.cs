@@ -26,3 +26,16 @@ public class UpdateCategoryRequest
     public long? ParentId { get; set; }
     public int SortOrder { get; set; } = 0;
 }
+
+public class MigrateDocumentsRequest
+{
+    public long SourceCategoryId { get; set; }
+    public long TargetCategoryId { get; set; }
+}
+
+public class MigrateDocumentsResult
+{
+    public int MigratedCount { get; set; }
+    public long SourceCategoryId { get; set; }
+    public long TargetCategoryId { get; set; }
+}

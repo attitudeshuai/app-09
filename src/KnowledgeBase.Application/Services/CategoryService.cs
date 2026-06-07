@@ -8,16 +8,29 @@ namespace KnowledgeBase.Application.Services;
 public class CategoryService : ICategoryService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cacheService;
+    private const string CategoryTreeCacheKey = "categories:tree";
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(30);
 
-    public CategoryService(IUnitOfWork unitOfWork)
+    public CategoryService(IUnitOfWork unitOfWork, ICacheService cacheService)
     {
         _unitOfWork = unitOfWork;
+        _cacheService = cacheService;
     }
 
     public async Task<IEnumerable<CategoryDto>> GetTreeAsync()
     {
+        var cached = await _cacheService.GetAsync<IEnumerable<CategoryDto>>(CategoryTreeCacheKey);
+        if (cached != null)
+        {
+            return cached;
+        }
+
         var categories = await _unitOfWork.Categories.GetTreeAsync();
-        return categories.Select(MapToDtoWithChildren);
+        var result = categories.Select(MapToDtoWithChildren).ToList();
+
+        await _cacheService.SetAsync(CategoryTreeCacheKey, result, CacheDuration);
+        return result;
     }
 
     public async Task<CategoryDto> GetByIdAsync(long id)
@@ -57,6 +70,7 @@ public class CategoryService : ICategoryService
 
         await _unitOfWork.Categories.AddAsync(category);
         await _unitOfWork.SaveChangesAsync();
+        await _cacheService.RemoveAsync(CategoryTreeCacheKey);
 
         return MapToDto(category);
     }
@@ -90,6 +104,7 @@ public class CategoryService : ICategoryService
 
         await _unitOfWork.Categories.UpdateAsync(category);
         await _unitOfWork.SaveChangesAsync();
+        await _cacheService.RemoveAsync(CategoryTreeCacheKey);
     }
 
     public async Task DeleteAsync(long id)
@@ -112,6 +127,94 @@ public class CategoryService : ICategoryService
 
         await _unitOfWork.Categories.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
+        await _cacheService.RemoveAsync(CategoryTreeCacheKey);
+    }
+
+    public async Task<MigrateDocumentsResult> MigrateDocumentsAsync(long sourceCategoryId, long targetCategoryId, long currentUserId)
+    {
+        if (sourceCategoryId == targetCategoryId)
+        {
+            throw new InvalidOperationException("源分类和目标分类不能相同");
+        }
+
+        if (!await _unitOfWork.Categories.ExistsAsync(sourceCategoryId))
+        {
+            throw new KeyNotFoundException("源分类不存在");
+        }
+
+        if (!await _unitOfWork.Categories.ExistsAsync(targetCategoryId))
+        {
+            throw new KeyNotFoundException("目标分类不存在");
+        }
+
+        var sourceCategory = await _unitOfWork.Categories.GetByIdAsync(sourceCategoryId);
+        var targetCategory = await _unitOfWork.Categories.GetByIdAsync(targetCategoryId);
+
+        if (sourceCategory == null || targetCategory == null)
+        {
+            throw new KeyNotFoundException("分类不存在");
+        }
+
+        var isDescendant = await IsDescendantAsync(targetCategoryId, sourceCategoryId);
+        if (isDescendant)
+        {
+            throw new InvalidOperationException("不能将文档迁移到源分类的子分类下");
+        }
+
+        var documents = await _unitOfWork.Documents.GetByCategoryIdAsync(sourceCategoryId);
+        var documentList = documents.ToList();
+
+        foreach (var document in documentList)
+        {
+            document.CategoryId = targetCategoryId;
+            document.UpdatedBy = currentUserId;
+            await _unitOfWork.Documents.UpdateAsync(document);
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+        await _cacheService.RemoveAsync(CategoryTreeCacheKey);
+
+        return new MigrateDocumentsResult
+        {
+            MigratedCount = documentList.Count,
+            SourceCategoryId = sourceCategoryId,
+            TargetCategoryId = targetCategoryId
+        };
+    }
+
+    private async Task<bool> IsDescendantAsync(long categoryId, long ancestorId)
+    {
+        var currentId = categoryId;
+        var visited = new HashSet<long>();
+
+        while (currentId != 0)
+        {
+            if (visited.Contains(currentId))
+            {
+                return false;
+            }
+            visited.Add(currentId);
+
+            var category = await _unitOfWork.Categories.GetByIdAsync(currentId);
+            if (category == null)
+            {
+                return false;
+            }
+
+            if (category.ParentId == ancestorId)
+            {
+                return true;
+            }
+
+            if (!category.ParentId.HasValue)
+            {
+                return false;
+            }
+
+            currentId = category.ParentId.Value;
+        }
+
+        return false;
     }
 
     private static CategoryDto MapToDto(Category category)

@@ -10,4 +10,5 @@ public interface ICategoryService
     Task<CategoryDto> CreateAsync(CreateCategoryRequest request, long currentUserId);
     Task UpdateAsync(long id, UpdateCategoryRequest request, long currentUserId);
     Task DeleteAsync(long id);
+    Task<MigrateDocumentsResult> MigrateDocumentsAsync(long sourceCategoryId, long targetCategoryId, long currentUserId);
 }

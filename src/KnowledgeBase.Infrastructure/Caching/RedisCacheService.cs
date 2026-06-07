@@ -1,15 +1,11 @@
 using StackExchange.Redis;
 using System.Text.Json;
+using KnowledgeBase.Application.Interfaces;
 
 namespace KnowledgeBase.Infrastructure.Caching;
 
-public interface IRedisCacheService
+public interface IRedisCacheService : ICacheService
 {
-    Task<T?> GetAsync<T>(string key);
-    Task SetAsync<T>(string key, T value, TimeSpan? expiry = null);
-    Task RemoveAsync(string key);
-    Task<bool> ExistsAsync(string key);
-    Task RefreshAsync(string key, TimeSpan expiry);
 }
 
 public class RedisCacheService : IRedisCacheService
