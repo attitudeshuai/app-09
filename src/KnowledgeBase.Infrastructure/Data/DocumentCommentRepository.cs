@@ -57,13 +57,17 @@ public class DocumentCommentRepository : IDocumentCommentRepository
     public async Task<(IEnumerable<DocumentComment> Items, int TotalCount)> GetPagedByDocumentIdAsync(
         long documentId,
         int pageNumber,
-        int pageSize)
+        int pageSize,
+        bool sortDescending = false)
     {
         var query = _context.DocumentComments
-            .Where(c => c.DocumentId == documentId)
+            .Where(c => c.DocumentId == documentId && c.ParentId == null)
             .Include(c => c.User)
-            .OrderBy(c => c.CreatedAt)
             .AsQueryable();
+
+        query = sortDescending
+            ? query.OrderByDescending(c => c.CreatedAt)
+            : query.OrderBy(c => c.CreatedAt);
 
         var totalCount = await query.CountAsync();
         var items = await query
@@ -74,9 +78,45 @@ public class DocumentCommentRepository : IDocumentCommentRepository
         return (items, totalCount);
     }
 
+    public async Task<List<DocumentComment>> GetAllByDocumentIdAsync(long documentId, bool sortDescending = false)
+    {
+        var query = _context.DocumentComments
+            .Where(c => c.DocumentId == documentId)
+            .Include(c => c.User)
+            .Include(c => c.ReplyToUser)
+            .AsQueryable();
+
+        query = sortDescending
+            ? query.OrderByDescending(c => c.CreatedAt)
+            : query.OrderBy(c => c.CreatedAt);
+
+        return await query.ToListAsync();
+    }
+
+    public async Task<List<DocumentComment>> GetRepliesByParentIdAsync(long parentId, bool sortDescending = false)
+    {
+        var query = _context.DocumentComments
+            .Where(c => c.ParentId == parentId)
+            .Include(c => c.User)
+            .Include(c => c.ReplyToUser)
+            .AsQueryable();
+
+        query = sortDescending
+            ? query.OrderByDescending(c => c.CreatedAt)
+            : query.OrderBy(c => c.CreatedAt);
+
+        return await query.ToListAsync();
+    }
+
     public async Task<int> CountByDocumentIdAsync(long documentId)
     {
         return await _context.DocumentComments
             .CountAsync(c => c.DocumentId == documentId);
+    }
+
+    public async Task<int> CountRootCommentsByDocumentIdAsync(long documentId)
+    {
+        return await _context.DocumentComments
+            .CountAsync(c => c.DocumentId == documentId && c.ParentId == null);
     }
 }

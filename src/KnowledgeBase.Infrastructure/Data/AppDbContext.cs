@@ -122,6 +122,7 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(c => c.DocumentId);
             entity.HasIndex(c => c.UserId);
+            entity.HasIndex(c => c.ParentId);
             entity.HasIndex(c => c.CreatedAt);
             entity.Property(c => c.Content).HasColumnType("longtext").IsRequired();
             entity.HasOne(c => c.User)
@@ -132,6 +133,14 @@ public class AppDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(c => c.DocumentId)
                   .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(c => c.Parent)
+                  .WithMany(c => c.Children)
+                  .HasForeignKey(c => c.ParentId)
+                  .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(c => c.ReplyToUser)
+                  .WithMany()
+                  .HasForeignKey(c => c.ReplyToUserId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<DocumentViewHistory>(entity =>

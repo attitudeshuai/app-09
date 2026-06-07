@@ -8,4 +8,5 @@ public interface ICommentService
     Task<PagedResult<CommentDto>> GetPagedByDocumentIdAsync(long documentId, CommentPagedRequest request);
     Task<CommentDto> CreateAsync(CreateCommentRequest request, long userId);
     Task<int> GetCountByDocumentIdAsync(long documentId);
+    Task<List<CommentDto>> GetRepliesByParentIdAsync(long parentId, CommentSortOrder sortOrder = CommentSortOrder.Asc);
 }

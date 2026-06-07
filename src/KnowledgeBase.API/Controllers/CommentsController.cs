@@ -26,14 +26,27 @@ public class CommentsController : ControllerBase
     public async Task<ActionResult<PagedResult<CommentDto>>> GetPagedByDocumentId(
         long documentId,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20,
+        [FromQuery] CommentSortOrder sortOrder = CommentSortOrder.Asc)
     {
         var request = new CommentPagedRequest
         {
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
+            SortOrder = sortOrder
         };
         var result = await _commentService.GetPagedByDocumentIdAsync(documentId, request);
+        return Ok(result);
+    }
+
+    [HttpGet("{parentId}/replies")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(List<CommentDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<CommentDto>>> GetReplies(
+        long parentId,
+        [FromQuery] CommentSortOrder sortOrder = CommentSortOrder.Asc)
+    {
+        var result = await _commentService.GetRepliesByParentIdAsync(parentId, sortOrder);
         return Ok(result);
     }
 

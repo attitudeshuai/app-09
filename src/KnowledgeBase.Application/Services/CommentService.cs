@@ -17,12 +17,24 @@ public class CommentService : ICommentService
 
     public async Task<PagedResult<CommentDto>> GetPagedByDocumentIdAsync(long documentId, CommentPagedRequest request)
     {
-        var (items, totalCount) = await _unitOfWork.DocumentComments.GetPagedByDocumentIdAsync(
-            documentId, request.PageNumber, request.PageSize);
+        var sortDescending = request.SortOrder == CommentSortOrder.Desc;
+
+        var (rootComments, totalCount) = await _unitOfWork.DocumentComments.GetPagedByDocumentIdAsync(
+            documentId, request.PageNumber, request.PageSize, sortDescending);
+
+        var allComments = await _unitOfWork.DocumentComments.GetAllByDocumentIdAsync(documentId, sortDescending: false);
+
+        var commentDtos = rootComments.Select(c =>
+        {
+            var dto = MapToCommentDto(c);
+            dto.Replies = BuildReplyTree(c.Id, allComments, request.SortOrder);
+            dto.ReplyCount = CountAllReplies(c.Id, allComments);
+            return dto;
+        }).ToList();
 
         return new PagedResult<CommentDto>
         {
-            Items = items.Select(MapToCommentDto),
+            Items = commentDtos,
             TotalCount = totalCount,
             PageNumber = request.PageNumber,
             PageSize = request.PageSize
@@ -47,11 +59,44 @@ public class CommentService : ICommentService
             throw new InvalidOperationException("只有已发布的文档才能发表评论");
         }
 
+        long? parentId = null;
+        long? replyToUserId = null;
+
+        if (request.ParentId.HasValue)
+        {
+            var parentComment = await _unitOfWork.DocumentComments.GetByIdAsync(request.ParentId.Value);
+            if (parentComment == null)
+            {
+                throw new KeyNotFoundException("父评论不存在");
+            }
+            if (parentComment.DocumentId != request.DocumentId)
+            {
+                throw new ArgumentException("父评论不属于该文档");
+            }
+            parentId = request.ParentId.Value;
+
+            if (request.ReplyToUserId.HasValue)
+            {
+                var replyToUser = await _unitOfWork.Users.GetByIdAsync(request.ReplyToUserId.Value);
+                if (replyToUser == null)
+                {
+                    throw new KeyNotFoundException("被回复的用户不存在");
+                }
+                replyToUserId = request.ReplyToUserId.Value;
+            }
+            else
+            {
+                replyToUserId = parentComment.UserId;
+            }
+        }
+
         var comment = new DocumentComment
         {
             DocumentId = request.DocumentId,
             UserId = userId,
             Content = request.Content.Trim(),
+            ParentId = parentId,
+            ReplyToUserId = replyToUserId,
             CreatedBy = userId
         };
 
@@ -67,6 +112,41 @@ public class CommentService : ICommentService
         return await _unitOfWork.DocumentComments.CountByDocumentIdAsync(documentId);
     }
 
+    public async Task<List<CommentDto>> GetRepliesByParentIdAsync(long parentId, CommentSortOrder sortOrder = CommentSortOrder.Asc)
+    {
+        var sortDescending = sortOrder == CommentSortOrder.Desc;
+        var replies = await _unitOfWork.DocumentComments.GetRepliesByParentIdAsync(parentId, sortDescending);
+        return replies.Select(MapToCommentDto).ToList();
+    }
+
+    private static List<CommentDto> BuildReplyTree(long parentId, List<DocumentComment> allComments, CommentSortOrder sortOrder)
+    {
+        var replies = allComments
+            .Where(c => c.ParentId == parentId)
+            .Select(c =>
+            {
+                var dto = MapToCommentDto(c);
+                dto.Replies = BuildReplyTree(c.Id, allComments, sortOrder);
+                dto.ReplyCount = CountAllReplies(c.Id, allComments);
+                return dto;
+            });
+
+        return sortOrder == CommentSortOrder.Desc
+            ? replies.OrderByDescending(c => c.CreatedAt).ToList()
+            : replies.OrderBy(c => c.CreatedAt).ToList();
+    }
+
+    private static int CountAllReplies(long parentId, List<DocumentComment> allComments)
+    {
+        var directReplies = allComments.Where(c => c.ParentId == parentId).ToList();
+        var count = directReplies.Count;
+        foreach (var reply in directReplies)
+        {
+            count += CountAllReplies(reply.Id, allComments);
+        }
+        return count;
+    }
+
     private static CommentDto MapToCommentDto(DocumentComment comment)
     {
         return new CommentDto
@@ -78,7 +158,12 @@ public class CommentService : ICommentService
             Nickname = comment.User?.Nickname,
             Avatar = comment.User?.Avatar,
             Content = comment.Content,
-            CreatedAt = comment.CreatedAt
+            CreatedAt = comment.CreatedAt,
+            ParentId = comment.ParentId,
+            ReplyToUserId = comment.ReplyToUserId,
+            ReplyToUsername = comment.ReplyToUser?.Username,
+            ReplyToNickname = comment.ReplyToUser?.Nickname,
+            ReplyToAvatar = comment.ReplyToUser?.Avatar
         };
     }
 }
