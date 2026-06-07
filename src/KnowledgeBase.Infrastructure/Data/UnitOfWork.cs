@@ -13,6 +13,7 @@ public class UnitOfWork : IUnitOfWork
     private IDocumentFavoriteRepository? _documentFavorites;
     private IDocumentCommentRepository? _documentComments;
     private IDocumentViewHistoryRepository? _documentViewHistories;
+    private IUserPasswordHistoryRepository? _userPasswordHistories;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -26,6 +27,7 @@ public class UnitOfWork : IUnitOfWork
     public IDocumentFavoriteRepository DocumentFavorites => _documentFavorites ??= new DocumentFavoriteRepository(_context);
     public IDocumentCommentRepository DocumentComments => _documentComments ??= new DocumentCommentRepository(_context);
     public IDocumentViewHistoryRepository DocumentViewHistories => _documentViewHistories ??= new DocumentViewHistoryRepository(_context);
+    public IUserPasswordHistoryRepository UserPasswordHistories => _userPasswordHistories ??= new UserPasswordHistoryRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

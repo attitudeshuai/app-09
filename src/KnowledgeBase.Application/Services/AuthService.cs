@@ -32,6 +32,17 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("用户名或密码错误");
         }
 
+        if (user.IsLockedOut)
+        {
+            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow)
+            {
+                throw new UnauthorizedAccessException("账号已被锁定，请稍后再试");
+            }
+
+            user.IsLockedOut = false;
+            user.LockoutEnd = null;
+        }
+
         if (!_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
             throw new UnauthorizedAccessException("用户名或密码错误");

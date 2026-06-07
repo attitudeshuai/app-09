@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<DocumentFavorite> DocumentFavorites { get; set; }
     public DbSet<DocumentComment> DocumentComments { get; set; }
     public DbSet<DocumentViewHistory> DocumentViewHistories { get; set; }
+    public DbSet<UserPasswordHistory> UserPasswordHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,6 +31,18 @@ public class AppDbContext : DbContext
             entity.Property(u => u.PasswordHash).HasMaxLength(255).IsRequired();
             entity.Property(u => u.Nickname).HasMaxLength(50);
             entity.Property(u => u.Avatar).HasMaxLength(500);
+            entity.HasMany(u => u.PasswordHistories)
+                  .WithOne(h => h.User)
+                  .HasForeignKey(h => h.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UserPasswordHistory>(entity =>
+        {
+            entity.HasKey(h => h.Id);
+            entity.HasIndex(h => h.UserId);
+            entity.HasIndex(h => h.CreatedAt);
+            entity.Property(h => h.PasswordHash).HasMaxLength(255).IsRequired();
         });
 
         modelBuilder.Entity<Category>(entity =>

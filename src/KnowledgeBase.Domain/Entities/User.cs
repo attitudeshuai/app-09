@@ -9,4 +9,8 @@ public class User : BaseEntity
     public string? Avatar { get; set; }
     public UserRole Role { get; set; } = UserRole.Viewer;
     public bool IsActive { get; set; } = true;
+    public bool IsLockedOut { get; set; } = false;
+    public DateTime? LockoutEnd { get; set; }
+
+    public ICollection<UserPasswordHistory> PasswordHistories { get; set; } = new List<UserPasswordHistory>();
 }

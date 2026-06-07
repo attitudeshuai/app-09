@@ -1,5 +1,6 @@
 using KnowledgeBase.Application.Interfaces;
 using KnowledgeBase.Application.Services;
+using KnowledgeBase.Domain.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace KnowledgeBase.Application;
@@ -17,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<IFavoriteService, FavoriteService>();
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<IViewHistoryService, ViewHistoryService>();
+        services.AddScoped<IPasswordValidator, PasswordValidator>();
 
         return services;
     }

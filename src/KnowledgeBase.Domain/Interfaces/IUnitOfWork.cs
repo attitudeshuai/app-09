@@ -9,6 +9,7 @@ public interface IUnitOfWork : IDisposable
     IDocumentFavoriteRepository DocumentFavorites { get; }
     IDocumentCommentRepository DocumentComments { get; }
     IDocumentViewHistoryRepository DocumentViewHistories { get; }
+    IUserPasswordHistoryRepository UserPasswordHistories { get; }
     Task<int> SaveChangesAsync();
     Task<ITransaction> BeginTransactionAsync();
 }
