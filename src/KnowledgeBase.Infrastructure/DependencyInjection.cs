@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.Configure<ViewHistoryOptions>(configuration.GetSection(ViewHistoryOptions.SectionName));
+        services.Configure<LockoutOptions>(configuration.GetSection(LockoutOptions.SectionName));
         services.AddHostedService<ViewHistoryCleanupService>();
         services.AddHostedService<DocumentPublishService>();
 

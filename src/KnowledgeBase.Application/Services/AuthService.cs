@@ -1,9 +1,11 @@
 using KnowledgeBase.Application.DTOs.Auth;
 using KnowledgeBase.Application.DTOs.Users;
 using KnowledgeBase.Application.Interfaces;
+using KnowledgeBase.Application.Options;
 using KnowledgeBase.Domain.Entities;
 using KnowledgeBase.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -16,12 +18,21 @@ public class AuthService : IAuthService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IConfiguration _configuration;
+    private readonly ICacheService _cacheService;
+    private readonly LockoutOptions _lockoutOptions;
 
-    public AuthService(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IConfiguration configuration)
+    public AuthService(
+        IUnitOfWork unitOfWork,
+        IPasswordHasher passwordHasher,
+        IConfiguration configuration,
+        ICacheService cacheService,
+        IOptions<LockoutOptions> lockoutOptions)
     {
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
         _configuration = configuration;
+        _cacheService = cacheService;
+        _lockoutOptions = lockoutOptions.Value;
     }
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
@@ -32,21 +43,29 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("用户名或密码错误");
         }
 
+        var failedAttemptsCacheKey = GetFailedAttemptsCacheKey(user.Username);
+
         if (user.IsLockedOut)
         {
             if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow)
             {
-                throw new UnauthorizedAccessException("账号已被锁定，请稍后再试");
+                var remainingTime = user.LockoutEnd.Value - DateTime.UtcNow;
+                throw new UnauthorizedAccessException($"账号已被锁定，请在 {Math.Ceiling(remainingTime.TotalMinutes)} 分钟后再试");
             }
 
             user.IsLockedOut = false;
             user.LockoutEnd = null;
+            await _cacheService.RemoveAsync(failedAttemptsCacheKey);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         if (!_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
+            await HandleFailedLoginAsync(user);
             throw new UnauthorizedAccessException("用户名或密码错误");
         }
+
+        await _cacheService.RemoveAsync(failedAttemptsCacheKey);
 
         var token = GenerateJwtToken(user);
         var expiresAt = DateTime.UtcNow.AddHours(double.Parse(_configuration["Jwt:ExpireHours"] ?? "24"));
@@ -57,6 +76,34 @@ public class AuthService : IAuthService
             ExpiresAt = expiresAt,
             User = MapToUserDto(user)
         };
+    }
+
+    private async Task HandleFailedLoginAsync(User user)
+    {
+        var cacheKey = GetFailedAttemptsCacheKey(user.Username);
+        var failedAttempts = 0;
+
+        if (await _cacheService.ExistsAsync(cacheKey))
+        {
+            failedAttempts = await _cacheService.GetAsync<int>(cacheKey);
+        }
+
+        failedAttempts++;
+
+        var windowTime = TimeSpan.FromMinutes(_lockoutOptions.FailedAttemptWindowMinutes);
+        await _cacheService.SetAsync(cacheKey, failedAttempts, windowTime);
+
+        if (failedAttempts >= _lockoutOptions.MaxFailedAttempts)
+        {
+            user.IsLockedOut = true;
+            user.LockoutEnd = DateTime.UtcNow.AddMinutes(_lockoutOptions.LockoutMinutes);
+            await _unitOfWork.SaveChangesAsync();
+        }
+    }
+
+    private static string GetFailedAttemptsCacheKey(string username)
+    {
+        return $"login:failed_attempts:{username}";
     }
 
     public async Task<UserDto> GetCurrentUserAsync(long userId)
