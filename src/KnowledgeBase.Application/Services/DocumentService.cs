@@ -16,32 +16,41 @@ public class DocumentService : IDocumentService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<DocumentDto> GetByIdAsync(long id)
+    public async Task<DocumentDto> GetByIdAsync(long id, long? userId = null)
     {
         var document = await _unitOfWork.Documents.GetByIdAsync(id);
         if (document == null)
         {
             throw new KeyNotFoundException("文档不存在");
         }
-        return MapToDto(document);
+
+        var isFavorited = userId.HasValue && userId.Value > 0
+            ? await _unitOfWork.DocumentFavorites.IsFavoritedAsync(userId.Value, id)
+            : false;
+
+        return MapToDto(document, isFavorited);
     }
 
-    public async Task<PagedResult<DocumentListDto>> GetPagedAsync(DocumentPagedRequest request)
+    public async Task<PagedResult<DocumentListDto>> GetPagedAsync(DocumentPagedRequest request, long? userId = null)
     {
         DocumentStatus? status = request.Status.HasValue ? (DocumentStatus?)request.Status.Value : null;
         var (items, totalCount) = await _unitOfWork.Documents.GetPagedAsync(
             request.PageNumber, request.PageSize, request.Keyword, request.CategoryId, status);
 
+        var favoritedIds = userId.HasValue && userId.Value > 0
+            ? await _unitOfWork.DocumentFavorites.GetFavoritedDocumentIdsAsync(userId.Value, items.Select(d => d.Id))
+            : new List<long>();
+
         return new PagedResult<DocumentListDto>
         {
-            Items = items.Select(MapToListDto),
+            Items = items.Select(d => MapToListDto(d, favoritedIds.Contains(d.Id))),
             TotalCount = totalCount,
             PageNumber = request.PageNumber,
             PageSize = request.PageSize
         };
     }
 
-    public async Task<PagedResult<DocumentListDto>> SearchAsync(string keyword, int pageNumber, int pageSize)
+    public async Task<PagedResult<DocumentListDto>> SearchAsync(string keyword, int pageNumber, int pageSize, long? userId = null)
     {
         if (string.IsNullOrWhiteSpace(keyword))
         {
@@ -57,9 +66,13 @@ public class DocumentService : IDocumentService
         var items = await _unitOfWork.Documents.SearchAsync(keyword, pageNumber, pageSize);
         var totalCount = await _unitOfWork.Documents.SearchCountAsync(keyword);
 
+        var favoritedIds = userId.HasValue && userId.Value > 0
+            ? await _unitOfWork.DocumentFavorites.GetFavoritedDocumentIdsAsync(userId.Value, items.Select(d => d.Id))
+            : new List<long>();
+
         return new PagedResult<DocumentListDto>
         {
-            Items = items.Select(MapToListDto),
+            Items = items.Select(d => MapToListDto(d, favoritedIds.Contains(d.Id))),
             TotalCount = totalCount,
             PageNumber = pageNumber,
             PageSize = pageSize
@@ -184,7 +197,7 @@ public class DocumentService : IDocumentService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    private static DocumentDto MapToDto(Document document)
+    private static DocumentDto MapToDto(Document document, bool isFavorited = false)
     {
         return new DocumentDto
         {
@@ -200,11 +213,12 @@ public class DocumentService : IDocumentService
             Version = document.Version,
             CreatedBy = document.CreatedBy,
             CreatedAt = document.CreatedAt,
-            UpdatedAt = document.UpdatedAt
+            UpdatedAt = document.UpdatedAt,
+            IsFavorited = isFavorited
         };
     }
 
-    private static DocumentListDto MapToListDto(Document document)
+    private static DocumentListDto MapToListDto(Document document, bool isFavorited = false)
     {
         return new DocumentListDto
         {
@@ -218,7 +232,8 @@ public class DocumentService : IDocumentService
             ViewCount = document.ViewCount,
             Version = document.Version,
             CreatedAt = document.CreatedAt,
-            UpdatedAt = document.UpdatedAt
+            UpdatedAt = document.UpdatedAt,
+            IsFavorited = isFavorited
         };
     }
 }

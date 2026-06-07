@@ -15,6 +15,7 @@ public class DocumentDto
     public long CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public bool IsFavorited { get; set; }
 }
 
 public class DocumentListDto
@@ -30,6 +31,7 @@ public class DocumentListDto
     public int Version { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public bool IsFavorited { get; set; }
 }
 
 public class CreateDocumentRequest

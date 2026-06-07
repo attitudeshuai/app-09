@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IDocumentVersionService, DocumentVersionService>();
         services.AddScoped<IStatisticsService, StatisticsService>();
+        services.AddScoped<IFavoriteService, FavoriteService>();
 
         return services;
     }

@@ -38,7 +38,8 @@ public class DocumentsController : ControllerBase
             CategoryId = categoryId,
             Status = status
         };
-        var result = await _documentService.GetPagedAsync(request);
+        var userId = GetCurrentUserIdOrNull();
+        var result = await _documentService.GetPagedAsync(request, userId);
         return Ok(result);
     }
 
@@ -50,7 +51,8 @@ public class DocumentsController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        var result = await _documentService.SearchAsync(keyword, pageNumber, pageSize);
+        var userId = GetCurrentUserIdOrNull();
+        var result = await _documentService.SearchAsync(keyword, pageNumber, pageSize, userId);
         return Ok(result);
     }
 
@@ -62,7 +64,8 @@ public class DocumentsController : ControllerBase
     {
         try
         {
-            var document = await _documentService.GetByIdAsync(id);
+            var userId = GetCurrentUserIdOrNull();
+            var document = await _documentService.GetByIdAsync(id, userId);
             return Ok(document);
         }
         catch (KeyNotFoundException ex)
@@ -156,5 +159,15 @@ public class DocumentsController : ControllerBase
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return long.Parse(userIdClaim ?? "0");
+    }
+
+    private long? GetCurrentUserIdOrNull()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (long.TryParse(userIdClaim, out var userId) && userId > 0)
+        {
+            return userId;
+        }
+        return null;
     }
 }

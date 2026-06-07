@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Category> Categories { get; set; }
     public DbSet<Document> Documents { get; set; }
     public DbSet<DocumentVersion> DocumentVersions { get; set; }
+    public DbSet<DocumentFavorite> DocumentFavorites { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,6 +69,21 @@ public class AppDbContext : DbContext
             entity.Property(v => v.Summary).HasMaxLength(500);
             entity.Property(v => v.Tags).HasMaxLength(500);
             entity.Property(v => v.ChangeLog).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<DocumentFavorite>(entity =>
+        {
+            entity.HasKey(df => new { df.UserId, df.DocumentId });
+            entity.HasIndex(df => df.UserId);
+            entity.HasIndex(df => df.DocumentId);
+            entity.HasOne(df => df.User)
+                  .WithMany()
+                  .HasForeignKey(df => df.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(df => df.Document)
+                  .WithMany()
+                  .HasForeignKey(df => df.DocumentId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

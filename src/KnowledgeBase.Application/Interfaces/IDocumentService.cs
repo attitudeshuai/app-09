@@ -5,9 +5,9 @@ namespace KnowledgeBase.Application.Interfaces;
 
 public interface IDocumentService
 {
-    Task<DocumentDto> GetByIdAsync(long id);
-    Task<PagedResult<DocumentListDto>> GetPagedAsync(DocumentPagedRequest request);
-    Task<PagedResult<DocumentListDto>> SearchAsync(string keyword, int pageNumber, int pageSize);
+    Task<DocumentDto> GetByIdAsync(long id, long? userId = null);
+    Task<PagedResult<DocumentListDto>> GetPagedAsync(DocumentPagedRequest request, long? userId = null);
+    Task<PagedResult<DocumentListDto>> SearchAsync(string keyword, int pageNumber, int pageSize, long? userId = null);
     Task<DocumentDto> CreateAsync(CreateDocumentRequest request, long currentUserId);
     Task<DocumentDto> UpdateAsync(long id, UpdateDocumentRequest request, long currentUserId);
     Task DeleteAsync(long id);

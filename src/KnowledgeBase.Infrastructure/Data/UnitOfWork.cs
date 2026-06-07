@@ -9,6 +9,7 @@ public class UnitOfWork : IUnitOfWork
     private ICategoryRepository? _categories;
     private IDocumentRepository? _documents;
     private IDocumentVersionRepository? _documentVersions;
+    private IDocumentFavoriteRepository? _documentFavorites;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -19,6 +20,7 @@ public class UnitOfWork : IUnitOfWork
     public ICategoryRepository Categories => _categories ??= new CategoryRepository(_context);
     public IDocumentRepository Documents => _documents ??= new DocumentRepository(_context);
     public IDocumentVersionRepository DocumentVersions => _documentVersions ??= new DocumentVersionRepository(_context);
+    public IDocumentFavoriteRepository DocumentFavorites => _documentFavorites ??= new DocumentFavoriteRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {
