@@ -17,6 +17,10 @@ public class UnitOfWork : IUnitOfWork
     private IUserPasswordHistoryRepository? _userPasswordHistories;
     private IUserFollowRepository? _userFollows;
     private IOperationLogRepository? _operationLogs;
+    private IPointRecordRepository? _pointRecords;
+    private ILevelRepository? _levels;
+    private IBadgeRepository? _badges;
+    private IUserBadgeRepository? _userBadges;
 
     public UnitOfWork(AppDbContext context)
     {
@@ -34,6 +38,10 @@ public class UnitOfWork : IUnitOfWork
     public IUserPasswordHistoryRepository UserPasswordHistories => _userPasswordHistories ??= new UserPasswordHistoryRepository(_context);
     public IUserFollowRepository UserFollows => _userFollows ??= new UserFollowRepository(_context);
     public IOperationLogRepository OperationLogs => _operationLogs ??= new OperationLogRepository(_context);
+    public IPointRecordRepository PointRecords => _pointRecords ??= new PointRecordRepository(_context);
+    public ILevelRepository Levels => _levels ??= new LevelRepository(_context);
+    public IBadgeRepository Badges => _badges ??= new BadgeRepository(_context);
+    public IUserBadgeRepository UserBadges => _userBadges ??= new UserBadgeRepository(_context);
 
     public async Task<int> SaveChangesAsync()
     {

@@ -20,6 +20,10 @@ public class AppDbContext : DbContext
     public DbSet<UserPasswordHistory> UserPasswordHistories { get; set; }
     public DbSet<UserFollow> UserFollows { get; set; }
     public DbSet<OperationLog> OperationLogs { get; set; }
+    public DbSet<PointRecord> PointRecords { get; set; }
+    public DbSet<Level> Levels { get; set; }
+    public DbSet<Badge> Badges { get; set; }
+    public DbSet<UserBadge> UserBadges { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -195,6 +199,69 @@ public class AppDbContext : DbContext
             entity.HasOne(o => o.User)
                   .WithMany()
                   .HasForeignKey(o => o.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasIndex(u => u.TotalPoints);
+            entity.HasIndex(u => u.LevelId);
+            entity.HasOne(u => u.Level)
+                  .WithMany()
+                  .HasForeignKey(u => u.LevelId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<PointRecord>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.HasIndex(p => p.UserId);
+            entity.HasIndex(p => p.Source);
+            entity.HasIndex(p => p.CreatedAt);
+            entity.Property(p => p.Source).IsRequired();
+            entity.Property(p => p.Points).IsRequired();
+            entity.Property(p => p.Description).HasMaxLength(500);
+            entity.Property(p => p.ReferenceType).HasMaxLength(50);
+            entity.HasOne(p => p.User)
+                  .WithMany(u => u.PointRecords)
+                  .HasForeignKey(p => p.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Level>(entity =>
+        {
+            entity.HasKey(l => l.Id);
+            entity.HasIndex(l => l.LevelNumber).IsUnique();
+            entity.HasIndex(l => l.RequiredPoints);
+            entity.Property(l => l.Name).HasMaxLength(50).IsRequired();
+            entity.Property(l => l.Icon).HasMaxLength(200);
+            entity.Property(l => l.Color).HasMaxLength(20);
+            entity.Property(l => l.Description).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<Badge>(entity =>
+        {
+            entity.HasKey(b => b.Id);
+            entity.HasIndex(b => b.Type);
+            entity.HasIndex(b => b.IsActive);
+            entity.Property(b => b.Name).HasMaxLength(50).IsRequired();
+            entity.Property(b => b.Icon).HasMaxLength(200).IsRequired();
+            entity.Property(b => b.Description).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<UserBadge>(entity =>
+        {
+            entity.HasKey(ub => new { ub.UserId, ub.BadgeId });
+            entity.HasIndex(ub => ub.UserId);
+            entity.HasIndex(ub => ub.BadgeId);
+            entity.HasIndex(ub => ub.EarnedAt);
+            entity.HasOne(ub => ub.User)
+                  .WithMany(u => u.UserBadges)
+                  .HasForeignKey(ub => ub.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(ub => ub.Badge)
+                  .WithMany()
+                  .HasForeignKey(ub => ub.BadgeId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }

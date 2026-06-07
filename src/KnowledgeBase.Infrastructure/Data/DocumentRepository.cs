@@ -205,6 +205,20 @@ public class DocumentRepository : IDocumentRepository
         return await query.CountAsync();
     }
 
+    public async Task<IEnumerable<Document>> GetByUserIdAsync(long userId, DocumentStatus? status = null)
+    {
+        var query = _context.Documents.Where(d => d.CreatedBy == userId);
+
+        if (status.HasValue)
+        {
+            query = query.Where(d => d.Status == status.Value);
+        }
+
+        return await query
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task<bool> CanViewDocumentAsync(long documentId, bool isAuthenticated, UserRole? userRole)
     {
         var query = _context.Documents.Where(d => d.Id == documentId && d.Status == DocumentStatus.Published);

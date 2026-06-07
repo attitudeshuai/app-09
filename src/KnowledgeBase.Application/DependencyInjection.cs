@@ -1,4 +1,5 @@
 using KnowledgeBase.Application.Interfaces;
+using KnowledgeBase.Application.Options;
 using KnowledgeBase.Application.Services;
 using KnowledgeBase.Domain.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,9 @@ public static class DependencyInjection
         services.AddScoped<IViewHistoryService, ViewHistoryService>();
         services.AddScoped<IOperationLogService, OperationLogService>();
         services.AddScoped<IPasswordValidator, PasswordValidator>();
+        services.AddScoped<IPointService, PointService>();
+        services.AddScoped<ILevelService, LevelService>();
+        services.AddScoped<IBadgeService, BadgeService>();
 
         return services;
     }

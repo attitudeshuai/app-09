@@ -12,5 +12,11 @@ public class User : BaseEntity
     public bool IsLockedOut { get; set; } = false;
     public DateTime? LockoutEnd { get; set; }
 
+    public int TotalPoints { get; set; }
+    public long? LevelId { get; set; }
+    public Level? Level { get; set; }
+
     public ICollection<UserPasswordHistory> PasswordHistories { get; set; } = new List<UserPasswordHistory>();
+    public ICollection<PointRecord> PointRecords { get; set; } = new List<PointRecord>();
+    public ICollection<UserBadge> UserBadges { get; set; } = new List<UserBadge>();
 }

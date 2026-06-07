@@ -27,7 +27,14 @@ public class UserService : IUserService
         {
             throw new KeyNotFoundException("用户不存在");
         }
-        return MapToDto(user);
+        var level = user.LevelId.HasValue
+            ? await _unitOfWork.Levels.GetByIdAsync(user.LevelId.Value)
+            : null;
+        if (level == null && user.TotalPoints > 0)
+        {
+            level = await _unitOfWork.Levels.GetLevelByPointsAsync(user.TotalPoints);
+        }
+        return MapToDto(user, level);
     }
 
     public async Task<PagedResult<UserDto>> GetPagedAsync(UserPagedRequest request)
@@ -35,9 +42,27 @@ public class UserService : IUserService
         var users = await _unitOfWork.Users.GetPagedAsync(request.PageNumber, request.PageSize, request.Keyword);
         var totalCount = await _unitOfWork.Users.CountAsync(request.Keyword);
 
+        var userList = users.ToList();
+        var allLevels = await _unitOfWork.Levels.GetAllAsync();
+        var levelDict = allLevels.ToDictionary(l => l.Id);
+
         return new PagedResult<UserDto>
         {
-            Items = users.Select(MapToDto),
+            Items = userList.Select(u =>
+            {
+                Level? level = null;
+                if (u.LevelId.HasValue && levelDict.TryGetValue(u.LevelId.Value, out var lvl))
+                {
+                    level = lvl;
+                }
+                else if (u.TotalPoints > 0)
+                {
+                    level = allLevels.Where(l => l.RequiredPoints <= u.TotalPoints)
+                                    .OrderByDescending(l => l.LevelNumber)
+                                    .FirstOrDefault();
+                }
+                return MapToDto(u, level);
+            }),
             TotalCount = totalCount,
             PageNumber = request.PageNumber,
             PageSize = request.PageSize
@@ -202,6 +227,27 @@ public class UserService : IUserService
         var followerCount = await _unitOfWork.UserFollows.GetFollowerCountAsync(userId);
         var followingCount = await _unitOfWork.UserFollows.GetFollowingCountAsync(userId);
 
+        var level = user.LevelId.HasValue
+            ? await _unitOfWork.Levels.GetByIdAsync(user.LevelId.Value)
+            : null;
+        if (level == null)
+        {
+            level = await _unitOfWork.Levels.GetLevelByPointsAsync(user.TotalPoints);
+        }
+        var nextLevel = level != null
+            ? await _unitOfWork.Levels.GetNextLevelAsync(level.LevelNumber)
+            : null;
+
+        var userBadges = await _unitOfWork.UserBadges.GetByUserIdAsync(userId);
+        var badges = userBadges.Select(ub => new BadgeSummaryDto
+        {
+            BadgeId = ub.BadgeId,
+            Name = ub.Badge?.Name ?? string.Empty,
+            Icon = ub.Badge?.Icon ?? string.Empty,
+            Description = ub.Badge?.Description,
+            EarnedAt = ub.EarnedAt
+        }).ToList();
+
         return new UserProfileDto
         {
             Id = user.Id,
@@ -216,7 +262,15 @@ public class UserService : IUserService
             DraftDocuments = draftDocuments,
             FollowerCount = followerCount,
             FollowingCount = followingCount,
-            IsFollowing = false
+            IsFollowing = false,
+            TotalPoints = user.TotalPoints,
+            LevelNumber = level?.LevelNumber ?? 0,
+            LevelName = level?.Name,
+            LevelIcon = level?.Icon,
+            LevelColor = level?.Color,
+            PointsToNextLevel = nextLevel != null ? nextLevel.RequiredPoints - user.TotalPoints : 0,
+            NextLevelRequiredPoints = nextLevel?.RequiredPoints ?? 0,
+            Badges = badges
         };
     }
 
@@ -240,6 +294,27 @@ public class UserService : IUserService
             ? await _unitOfWork.UserFollows.IsFollowingAsync(currentUserId, userId)
             : false;
 
+        var level = user.LevelId.HasValue
+            ? await _unitOfWork.Levels.GetByIdAsync(user.LevelId.Value)
+            : null;
+        if (level == null)
+        {
+            level = await _unitOfWork.Levels.GetLevelByPointsAsync(user.TotalPoints);
+        }
+        var nextLevel = level != null
+            ? await _unitOfWork.Levels.GetNextLevelAsync(level.LevelNumber)
+            : null;
+
+        var userBadges = await _unitOfWork.UserBadges.GetByUserIdAsync(userId);
+        var badges = userBadges.Select(ub => new BadgeSummaryDto
+        {
+            BadgeId = ub.BadgeId,
+            Name = ub.Badge?.Name ?? string.Empty,
+            Icon = ub.Badge?.Icon ?? string.Empty,
+            Description = ub.Badge?.Description,
+            EarnedAt = ub.EarnedAt
+        }).ToList();
+
         return new UserProfileDto
         {
             Id = user.Id,
@@ -254,7 +329,15 @@ public class UserService : IUserService
             DraftDocuments = 0,
             FollowerCount = followerCount,
             FollowingCount = followingCount,
-            IsFollowing = isFollowing
+            IsFollowing = isFollowing,
+            TotalPoints = user.TotalPoints,
+            LevelNumber = level?.LevelNumber ?? 0,
+            LevelName = level?.Name,
+            LevelIcon = level?.Icon,
+            LevelColor = level?.Color,
+            PointsToNextLevel = nextLevel != null ? nextLevel.RequiredPoints - user.TotalPoints : 0,
+            NextLevelRequiredPoints = nextLevel?.RequiredPoints ?? 0,
+            Badges = badges
         };
     }
 
@@ -280,7 +363,7 @@ public class UserService : IUserService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    private static UserDto MapToDto(User user)
+    private static UserDto MapToDto(User user, Level? level = null)
     {
         return new UserDto
         {
@@ -291,7 +374,13 @@ public class UserService : IUserService
             Avatar = user.Avatar,
             Role = (int)user.Role,
             IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            TotalPoints = user.TotalPoints,
+            LevelId = user.LevelId,
+            LevelNumber = level?.LevelNumber,
+            LevelName = level?.Name,
+            LevelIcon = level?.Icon,
+            LevelColor = level?.Color
         };
     }
 }

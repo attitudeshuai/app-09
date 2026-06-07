@@ -10,6 +10,12 @@ public class UserDto
     public int Role { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
+    public int TotalPoints { get; set; }
+    public long? LevelId { get; set; }
+    public int? LevelNumber { get; set; }
+    public string? LevelName { get; set; }
+    public string? LevelIcon { get; set; }
+    public string? LevelColor { get; set; }
 }
 
 public class CreateUserRequest
@@ -59,6 +65,23 @@ public class UserProfileDto
     public int FollowerCount { get; set; }
     public int FollowingCount { get; set; }
     public bool IsFollowing { get; set; }
+    public int TotalPoints { get; set; }
+    public int LevelNumber { get; set; }
+    public string? LevelName { get; set; }
+    public string? LevelIcon { get; set; }
+    public string? LevelColor { get; set; }
+    public int PointsToNextLevel { get; set; }
+    public int NextLevelRequiredPoints { get; set; }
+    public List<BadgeSummaryDto>? Badges { get; set; }
+}
+
+public class BadgeSummaryDto
+{
+    public long BadgeId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Icon { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public DateTime EarnedAt { get; set; }
 }
 
 public class UpdateProfileRequest

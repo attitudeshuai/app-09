@@ -114,6 +114,12 @@ public class DocumentCommentRepository : IDocumentCommentRepository
             .CountAsync(c => c.DocumentId == documentId);
     }
 
+    public async Task<int> CountByUserIdAsync(long userId)
+    {
+        return await _context.DocumentComments
+            .CountAsync(c => c.UserId == userId);
+    }
+
     public async Task<int> CountRootCommentsByDocumentIdAsync(long documentId)
     {
         return await _context.DocumentComments

@@ -120,5 +120,44 @@ public static class DbInitializer
             context.DocumentVersions.Add(version1);
             await context.SaveChangesAsync();
         }
+
+        if (!await context.Levels.AnyAsync())
+        {
+            var levels = new List<Level>
+            {
+                new Level { Name = "新手", LevelNumber = 1, RequiredPoints = 0, Icon = "🌱", Color = "#9CA3AF", Description = "刚刚加入的新用户", CreatedBy = 1 },
+                new Level { Name = "学徒", LevelNumber = 2, RequiredPoints = 50, Icon = "🌿", Color = "#34D399", Description = "开始学习成长", CreatedBy = 1 },
+                new Level { Name = "进阶者", LevelNumber = 3, RequiredPoints = 200, Icon = "🌳", Color = "#10B981", Description = "掌握了不少知识", CreatedBy = 1 },
+                new Level { Name = "达人", LevelNumber = 4, RequiredPoints = 500, Icon = "⭐", Color = "#FBBF24", Description = "社区中的活跃用户", CreatedBy = 1 },
+                new Level { Name = "专家", LevelNumber = 5, RequiredPoints = 1000, Icon = "🌟", Color = "#F59E0B", Description = "知识渊博的专家", CreatedBy = 1 },
+                new Level { Name = "大师", LevelNumber = 6, RequiredPoints = 3000, Icon = "💎", Color = "#8B5CF6", Description = "社区的中流砥柱", CreatedBy = 1 },
+                new Level { Name = "宗师", LevelNumber = 7, RequiredPoints = 8000, Icon = "👑", Color = "#EF4444", Description = "传说级别的存在", CreatedBy = 1 }
+            };
+
+            context.Levels.AddRange(levels);
+            await context.SaveChangesAsync();
+        }
+
+        if (!await context.Badges.AnyAsync())
+        {
+            var badges = new List<Badge>
+            {
+                new Badge { Name = "初出茅庐", Icon = "📝", Description = "发布第一篇文档", Type = BadgeType.Documents, RequiredValue = 1, IsActive = true, CreatedBy = 1 },
+                new Badge { Name = "勤笔达人", Icon = "✍️", Description = "发布10篇文档", Type = BadgeType.Documents, RequiredValue = 10, IsActive = true, CreatedBy = 1 },
+                new Badge { Name = "著作等身", Icon = "📚", Description = "发布50篇文档", Type = BadgeType.Documents, RequiredValue = 50, IsActive = true, CreatedBy = 1 },
+                new Badge { Name = "小试牛刀", Icon = "💬", Description = "发表第一条评论", Type = BadgeType.Comments, RequiredValue = 1, IsActive = true, CreatedBy = 1 },
+                new Badge { Name = "评论达人", Icon = "🗣️", Description = "发表50条评论", Type = BadgeType.Comments, RequiredValue = 50, IsActive = true, CreatedBy = 1 },
+                new Badge { Name = "人气王", Icon = "❤️", Description = "获得100个点赞", Type = BadgeType.Likes, RequiredValue = 100, IsActive = true, CreatedBy = 1 },
+                new Badge { Name = "万人迷", Icon = "💖", Description = "获得500个点赞", Type = BadgeType.Likes, RequiredValue = 500, IsActive = true, CreatedBy = 1 },
+                new Badge { Name = "积分新秀", Icon = "🥉", Description = "积分达到100", Type = BadgeType.Points, RequiredValue = 100, IsActive = true, CreatedBy = 1 },
+                new Badge { Name = "积分达人", Icon = "🥈", Description = "积分达到500", Type = BadgeType.Points, RequiredValue = 500, IsActive = true, CreatedBy = 1 },
+                new Badge { Name = "积分王者", Icon = "🥇", Description = "积分达到2000", Type = BadgeType.Points, RequiredValue = 2000, IsActive = true, CreatedBy = 1 },
+                new Badge { Name = "粉丝初成", Icon = "👥", Description = "拥有10个粉丝", Type = BadgeType.Followers, RequiredValue = 10, IsActive = true, CreatedBy = 1 },
+                new Badge { Name = "意见领袖", Icon = "🎤", Description = "拥有100个粉丝", Type = BadgeType.Followers, RequiredValue = 100, IsActive = true, CreatedBy = 1 }
+            };
+
+            context.Badges.AddRange(badges);
+            await context.SaveChangesAsync();
+        }
     }
 }

@@ -13,6 +13,10 @@ public interface IUnitOfWork : IDisposable
     IUserPasswordHistoryRepository UserPasswordHistories { get; }
     IUserFollowRepository UserFollows { get; }
     IOperationLogRepository OperationLogs { get; }
+    IPointRecordRepository PointRecords { get; }
+    ILevelRepository Levels { get; }
+    IBadgeRepository Badges { get; }
+    IUserBadgeRepository UserBadges { get; }
     Task<int> SaveChangesAsync();
     Task<ITransaction> BeginTransactionAsync();
 }

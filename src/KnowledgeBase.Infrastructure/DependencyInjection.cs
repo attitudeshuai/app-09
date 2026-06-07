@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.Configure<ViewHistoryOptions>(configuration.GetSection(ViewHistoryOptions.SectionName));
         services.Configure<LockoutOptions>(configuration.GetSection(LockoutOptions.SectionName));
         services.Configure<FileStorageOptions>(configuration.GetSection(FileStorageOptions.SectionName));
+        services.Configure<PointOptions>(configuration.GetSection(PointOptions.SectionName));
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddHostedService<ViewHistoryCleanupService>();
         services.AddHostedService<DocumentPublishService>();

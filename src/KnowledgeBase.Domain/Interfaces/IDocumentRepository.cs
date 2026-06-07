@@ -25,6 +25,7 @@ public interface IDocumentRepository : IRepository<Document>
     Task<int> UpdateCategoryIdAsync(long sourceCategoryId, long targetCategoryId, long updatedBy);
     Task<IEnumerable<Document>> GetScheduledDocumentsToPublishAsync(DateTime now);
     Task<int> GetDocumentCountByUserIdAsync(long userId, DocumentStatus? status = null);
+    Task<IEnumerable<Document>> GetByUserIdAsync(long userId, DocumentStatus? status = null);
     Task<bool> CanViewDocumentAsync(long documentId, bool isAuthenticated, UserRole? userRole);
     Task<Dictionary<string, int>> GetAllTagsWithCountAsync(
         bool applyVisibilityFilter = false,

@@ -11,11 +11,15 @@ public class DocumentService : IDocumentService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILikeService _likeService;
+    private readonly IPointService _pointService;
+    private readonly IBadgeService _badgeService;
 
-    public DocumentService(IUnitOfWork unitOfWork, ILikeService likeService)
+    public DocumentService(IUnitOfWork unitOfWork, ILikeService likeService, IPointService pointService, IBadgeService badgeService)
     {
         _unitOfWork = unitOfWork;
         _likeService = likeService;
+        _pointService = pointService;
+        _badgeService = badgeService;
     }
 
     public async Task<DocumentDto> GetByIdAsync(long id, long? userId = null, UserRole? userRole = null)
@@ -154,6 +158,12 @@ public class DocumentService : IDocumentService
         await _unitOfWork.DocumentVersions.AddAsync(version);
         await _unitOfWork.SaveChangesAsync();
 
+        if (document.Status == DocumentStatus.Published)
+        {
+            await _pointService.AwardForPublishDocumentAsync(currentUserId, document.Id);
+            await _badgeService.CheckAndAwardBadgesAsync(currentUserId);
+        }
+
         return MapToDto(document);
     }
 
@@ -164,6 +174,8 @@ public class DocumentService : IDocumentService
         {
             throw new KeyNotFoundException("文档不存在");
         }
+
+        var originalStatus = document.Status;
 
         if (!await _unitOfWork.Categories.ExistsAsync(request.CategoryId))
         {
@@ -227,6 +239,12 @@ public class DocumentService : IDocumentService
         await _unitOfWork.Documents.UpdateAsync(document);
         await _unitOfWork.SaveChangesAsync();
 
+        if (originalStatus != DocumentStatus.Published && document.Status == DocumentStatus.Published)
+        {
+            await _pointService.AwardForPublishDocumentAsync(currentUserId, document.Id);
+            await _badgeService.CheckAndAwardBadgesAsync(currentUserId);
+        }
+
         return MapToDto(document);
     }
 
@@ -256,6 +274,8 @@ public class DocumentService : IDocumentService
             throw new KeyNotFoundException("文档不存在");
         }
 
+        var originalStatus = document.Status;
+
         document.Status = (DocumentStatus)status;
         if (document.Status != DocumentStatus.Scheduled)
         {
@@ -266,6 +286,12 @@ public class DocumentService : IDocumentService
 
         await _unitOfWork.Documents.UpdateAsync(document);
         await _unitOfWork.SaveChangesAsync();
+
+        if (originalStatus != DocumentStatus.Published && document.Status == DocumentStatus.Published)
+        {
+            await _pointService.AwardForPublishDocumentAsync(document.CreatedBy, document.Id);
+            await _badgeService.CheckAndAwardBadgesAsync(document.CreatedBy);
+        }
     }
 
     public async Task UpdateVisibilityAsync(long id, UpdateVisibilityRequest request, long currentUserId)
@@ -301,6 +327,12 @@ public class DocumentService : IDocumentService
         if (publishedCount > 0)
         {
             await _unitOfWork.SaveChangesAsync();
+
+            foreach (var document in scheduledDocuments)
+            {
+                await _pointService.AwardForPublishDocumentAsync(document.CreatedBy, document.Id);
+                await _badgeService.CheckAndAwardBadgesAsync(document.CreatedBy);
+            }
         }
 
         return publishedCount;

@@ -9,10 +9,14 @@ namespace KnowledgeBase.Application.Services;
 public class CommentService : ICommentService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPointService _pointService;
+    private readonly IBadgeService _badgeService;
 
-    public CommentService(IUnitOfWork unitOfWork)
+    public CommentService(IUnitOfWork unitOfWork, IPointService pointService, IBadgeService badgeService)
     {
         _unitOfWork = unitOfWork;
+        _pointService = pointService;
+        _badgeService = badgeService;
     }
 
     public async Task<PagedResult<CommentDto>> GetPagedByDocumentIdAsync(long documentId, CommentPagedRequest request, bool isAuthenticated = false, UserRole? userRole = null)
@@ -123,6 +127,9 @@ public class CommentService : ICommentService
 
         await _unitOfWork.DocumentComments.AddAsync(comment);
         await _unitOfWork.SaveChangesAsync();
+
+        await _pointService.AwardForCommentAsync(userId, comment.Id, request.DocumentId);
+        await _badgeService.CheckAndAwardBadgesAsync(userId);
 
         var createdComment = await _unitOfWork.DocumentComments.GetByIdAsync(comment.Id);
         return MapToCommentDto(createdComment!);

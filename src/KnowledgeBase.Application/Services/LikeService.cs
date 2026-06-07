@@ -9,16 +9,20 @@ public class LikeService : ILikeService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cacheService;
+    private readonly IPointService _pointService;
+    private readonly IBadgeService _badgeService;
     private const string LikeCountCachePrefix = "likes:count:";
     private const string UserLikeCachePrefix = "likes:user:";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
     private const int CacheRemoveMaxRetries = 3;
     private static readonly TimeSpan CacheRemoveRetryDelay = TimeSpan.FromMilliseconds(100);
 
-    public LikeService(IUnitOfWork unitOfWork, ICacheService cacheService)
+    public LikeService(IUnitOfWork unitOfWork, ICacheService cacheService, IPointService pointService, IBadgeService badgeService)
     {
         _unitOfWork = unitOfWork;
         _cacheService = cacheService;
+        _pointService = pointService;
+        _badgeService = badgeService;
     }
 
     public async Task<bool> IsLikedAsync(long userId, long documentId)
@@ -143,6 +147,19 @@ public class LikeService : ILikeService
 
             var newIsLiked = !isLiked;
             await UpdateCacheAsync(userId, documentId, newIsLiked, document.LikeCount);
+
+            if (document.CreatedBy != userId)
+            {
+                if (newIsLiked)
+                {
+                    await _pointService.AwardForLikedAsync(document.CreatedBy, documentId, userId);
+                }
+                else
+                {
+                    await _pointService.RevokeForLikedAsync(document.CreatedBy, documentId, userId);
+                }
+                await _badgeService.CheckAndAwardBadgesAsync(document.CreatedBy);
+            }
 
             return new LikeStatusDto
             {
