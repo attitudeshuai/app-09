@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<Document> Documents { get; set; }
     public DbSet<DocumentVersion> DocumentVersions { get; set; }
     public DbSet<DocumentFavorite> DocumentFavorites { get; set; }
+    public DbSet<DocumentComment> DocumentComments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -83,6 +84,22 @@ public class AppDbContext : DbContext
             entity.HasOne(df => df.Document)
                   .WithMany()
                   .HasForeignKey(df => df.DocumentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<DocumentComment>(entity =>
+        {
+            entity.HasIndex(c => c.DocumentId);
+            entity.HasIndex(c => c.UserId);
+            entity.HasIndex(c => c.CreatedAt);
+            entity.Property(c => c.Content).HasColumnType("longtext").IsRequired();
+            entity.HasOne(c => c.User)
+                  .WithMany()
+                  .HasForeignKey(c => c.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(c => c.Document)
+                  .WithMany()
+                  .HasForeignKey(c => c.DocumentId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
     }

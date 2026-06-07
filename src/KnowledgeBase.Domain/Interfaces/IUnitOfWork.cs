@@ -7,5 +7,6 @@ public interface IUnitOfWork : IDisposable
     IDocumentRepository Documents { get; }
     IDocumentVersionRepository DocumentVersions { get; }
     IDocumentFavoriteRepository DocumentFavorites { get; }
+    IDocumentCommentRepository DocumentComments { get; }
     Task<int> SaveChangesAsync();
 }
