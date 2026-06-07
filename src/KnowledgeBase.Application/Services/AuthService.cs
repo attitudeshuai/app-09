@@ -81,17 +81,30 @@ public class AuthService : IAuthService
     private async Task HandleFailedLoginAsync(User user)
     {
         var cacheKey = GetFailedAttemptsCacheKey(user.Username);
+        var now = DateTime.UtcNow;
+        var windowDuration = TimeSpan.FromMinutes(_lockoutOptions.FailedAttemptWindowMinutes);
+
+        var failedAttemptInfo = await _cacheService.GetAsync<FailedAttemptInfo>(cacheKey);
         var failedAttempts = 0;
 
-        if (await _cacheService.ExistsAsync(cacheKey))
+        if (failedAttemptInfo != null && now - failedAttemptInfo.WindowStart < windowDuration)
         {
-            failedAttempts = await _cacheService.GetAsync<int>(cacheKey);
+            failedAttempts = failedAttemptInfo.AttemptCount;
+        }
+        else
+        {
+            failedAttemptInfo = new FailedAttemptInfo
+            {
+                AttemptCount = 0,
+                WindowStart = now
+            };
         }
 
         failedAttempts++;
+        failedAttemptInfo.AttemptCount = failedAttempts;
 
-        var windowTime = TimeSpan.FromMinutes(_lockoutOptions.FailedAttemptWindowMinutes);
-        await _cacheService.SetAsync(cacheKey, failedAttempts, windowTime);
+        var cacheExpiry = windowDuration.Add(TimeSpan.FromMinutes(1));
+        await _cacheService.SetAsync(cacheKey, failedAttemptInfo, cacheExpiry);
 
         if (failedAttempts >= _lockoutOptions.MaxFailedAttempts)
         {
@@ -104,6 +117,12 @@ public class AuthService : IAuthService
     private static string GetFailedAttemptsCacheKey(string username)
     {
         return $"login:failed_attempts:{username}";
+    }
+
+    private class FailedAttemptInfo
+    {
+        public int AttemptCount { get; set; }
+        public DateTime WindowStart { get; set; }
     }
 
     public async Task<UserDto> GetCurrentUserAsync(long userId)
