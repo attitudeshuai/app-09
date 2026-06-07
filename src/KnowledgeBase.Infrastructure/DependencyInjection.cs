@@ -35,6 +35,7 @@ public static class DependencyInjection
 
         services.Configure<ViewHistoryOptions>(configuration.GetSection(ViewHistoryOptions.SectionName));
         services.AddHostedService<ViewHistoryCleanupService>();
+        services.AddHostedService<DocumentPublishService>();
 
         return services;
     }

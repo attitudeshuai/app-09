@@ -11,5 +11,8 @@ public class Document : BaseEntity
     public DocumentStatus Status { get; set; } = DocumentStatus.Draft;
     public int ViewCount { get; set; }
     public int Version { get; set; } = 1;
+    public DateTime? PublishTime { get; set; }
+    public bool IsAutoPublished { get; set; }
+    public long? ScheduledBy { get; set; }
     public ICollection<DocumentVersion> Versions { get; set; } = new List<DocumentVersion>();
 }

@@ -13,4 +13,5 @@ public interface IDocumentService
     Task DeleteAsync(long id);
     Task IncrementViewCountAsync(long id);
     Task UpdateStatusAsync(long id, int status, long currentUserId);
+    Task<int> PublishScheduledDocumentsAsync();
 }

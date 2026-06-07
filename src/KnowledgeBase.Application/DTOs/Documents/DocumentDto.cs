@@ -12,6 +12,9 @@ public class DocumentDto
     public int Status { get; set; }
     public int ViewCount { get; set; }
     public int Version { get; set; }
+    public DateTime? PublishTime { get; set; }
+    public bool IsAutoPublished { get; set; }
+    public long? ScheduledBy { get; set; }
     public long CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -29,6 +32,7 @@ public class DocumentListDto
     public int Status { get; set; }
     public int ViewCount { get; set; }
     public int Version { get; set; }
+    public DateTime? PublishTime { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool IsFavorited { get; set; }
@@ -42,6 +46,7 @@ public class CreateDocumentRequest
     public string? Tags { get; set; }
     public long CategoryId { get; set; }
     public int Status { get; set; } = 1;
+    public DateTime? PublishTime { get; set; }
 }
 
 public class UpdateDocumentRequest
@@ -52,6 +57,7 @@ public class UpdateDocumentRequest
     public string? Tags { get; set; }
     public long CategoryId { get; set; }
     public int? Status { get; set; }
+    public DateTime? PublishTime { get; set; }
     public string? ChangeLog { get; set; }
 }
 

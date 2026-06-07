@@ -86,6 +86,12 @@ public class DocumentService : IDocumentService
             throw new KeyNotFoundException("分类不存在");
         }
 
+        var status = (DocumentStatus)request.Status;
+        if (request.PublishTime.HasValue && request.PublishTime.Value > DateTime.UtcNow)
+        {
+            status = DocumentStatus.Scheduled;
+        }
+
         var document = new Document
         {
             Title = request.Title,
@@ -93,7 +99,9 @@ public class DocumentService : IDocumentService
             Summary = request.Summary,
             Tags = request.Tags,
             CategoryId = request.CategoryId,
-            Status = (DocumentStatus)request.Status,
+            Status = status,
+            PublishTime = request.PublishTime,
+            ScheduledBy = status == DocumentStatus.Scheduled ? currentUserId : null,
             ViewCount = 0,
             Version = 1,
             CreatedBy = currentUserId
@@ -152,10 +160,32 @@ public class DocumentService : IDocumentService
         document.Summary = request.Summary;
         document.Tags = request.Tags;
         document.CategoryId = request.CategoryId;
-        if (request.Status.HasValue)
+
+        if (request.PublishTime.HasValue)
+        {
+            document.PublishTime = request.PublishTime.Value;
+            if (request.PublishTime.Value > DateTime.UtcNow)
+            {
+                document.Status = DocumentStatus.Scheduled;
+                document.ScheduledBy = currentUserId;
+                document.IsAutoPublished = false;
+            }
+            else
+            {
+                document.Status = DocumentStatus.Published;
+                document.IsAutoPublished = false;
+            }
+        }
+        else if (request.Status.HasValue)
         {
             document.Status = (DocumentStatus)request.Status.Value;
+            if (document.Status != DocumentStatus.Scheduled)
+            {
+                document.PublishTime = null;
+                document.ScheduledBy = null;
+            }
         }
+
         document.Version++;
         document.UpdatedBy = currentUserId;
 
@@ -191,10 +221,37 @@ public class DocumentService : IDocumentService
         }
 
         document.Status = (DocumentStatus)status;
+        if (document.Status != DocumentStatus.Scheduled)
+        {
+            document.PublishTime = null;
+            document.ScheduledBy = null;
+        }
         document.UpdatedBy = currentUserId;
 
         await _unitOfWork.Documents.UpdateAsync(document);
         await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<int> PublishScheduledDocumentsAsync()
+    {
+        var now = DateTime.UtcNow;
+        var scheduledDocuments = await _unitOfWork.Documents.GetScheduledDocumentsToPublishAsync(now);
+
+        var publishedCount = 0;
+        foreach (var document in scheduledDocuments)
+        {
+            document.Status = DocumentStatus.Published;
+            document.IsAutoPublished = true;
+            document.UpdatedAt = now;
+            publishedCount++;
+        }
+
+        if (publishedCount > 0)
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        return publishedCount;
     }
 
     private static DocumentDto MapToDto(Document document, bool isFavorited = false)
@@ -211,6 +268,9 @@ public class DocumentService : IDocumentService
             Status = (int)document.Status,
             ViewCount = document.ViewCount,
             Version = document.Version,
+            PublishTime = document.PublishTime,
+            IsAutoPublished = document.IsAutoPublished,
+            ScheduledBy = document.ScheduledBy,
             CreatedBy = document.CreatedBy,
             CreatedAt = document.CreatedAt,
             UpdatedAt = document.UpdatedAt,
@@ -231,6 +291,7 @@ public class DocumentService : IDocumentService
             Status = (int)document.Status,
             ViewCount = document.ViewCount,
             Version = document.Version,
+            PublishTime = document.PublishTime,
             CreatedAt = document.CreatedAt,
             UpdatedAt = document.UpdatedAt,
             IsFavorited = isFavorited

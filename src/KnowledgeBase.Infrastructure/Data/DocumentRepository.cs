@@ -143,4 +143,13 @@ public class DocumentRepository : IDocumentRepository
                 .SetProperty(d => d.UpdatedAt, now)
                 .SetProperty(d => d.UpdatedBy, updatedBy));
     }
+
+    public async Task<IEnumerable<Document>> GetScheduledDocumentsToPublishAsync(DateTime now)
+    {
+        return await _context.Documents
+            .Where(d => d.Status == DocumentStatus.Scheduled
+                     && d.PublishTime.HasValue
+                     && d.PublishTime.Value <= now)
+            .ToListAsync();
+    }
 }
