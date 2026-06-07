@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<Document> Documents { get; set; }
     public DbSet<DocumentVersion> DocumentVersions { get; set; }
     public DbSet<DocumentFavorite> DocumentFavorites { get; set; }
+    public DbSet<DocumentLike> DocumentLikes { get; set; }
     public DbSet<DocumentComment> DocumentComments { get; set; }
     public DbSet<DocumentViewHistory> DocumentViewHistories { get; set; }
     public DbSet<UserPasswordHistory> UserPasswordHistories { get; set; }
@@ -98,6 +99,21 @@ public class AppDbContext : DbContext
             entity.HasOne(df => df.Document)
                   .WithMany()
                   .HasForeignKey(df => df.DocumentId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<DocumentLike>(entity =>
+        {
+            entity.HasKey(dl => new { dl.UserId, dl.DocumentId });
+            entity.HasIndex(dl => dl.UserId);
+            entity.HasIndex(dl => dl.DocumentId);
+            entity.HasOne(dl => dl.User)
+                  .WithMany()
+                  .HasForeignKey(dl => dl.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(dl => dl.Document)
+                  .WithMany()
+                  .HasForeignKey(dl => dl.DocumentId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
 

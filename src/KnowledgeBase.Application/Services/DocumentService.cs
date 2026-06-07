@@ -10,10 +10,12 @@ namespace KnowledgeBase.Application.Services;
 public class DocumentService : IDocumentService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILikeService _likeService;
 
-    public DocumentService(IUnitOfWork unitOfWork)
+    public DocumentService(IUnitOfWork unitOfWork, ILikeService likeService)
     {
         _unitOfWork = unitOfWork;
+        _likeService = likeService;
     }
 
     public async Task<DocumentDto> GetByIdAsync(long id, long? userId = null)
@@ -28,7 +30,11 @@ public class DocumentService : IDocumentService
             ? await _unitOfWork.DocumentFavorites.IsFavoritedAsync(userId.Value, id)
             : false;
 
-        return MapToDto(document, isFavorited);
+        var isLiked = userId.HasValue && userId.Value > 0
+            ? await _unitOfWork.DocumentLikes.IsLikedAsync(userId.Value, id)
+            : false;
+
+        return MapToDto(document, isFavorited, isLiked);
     }
 
     public async Task<PagedResult<DocumentListDto>> GetPagedAsync(DocumentPagedRequest request, long? userId = null)
@@ -41,9 +47,13 @@ public class DocumentService : IDocumentService
             ? await _unitOfWork.DocumentFavorites.GetFavoritedDocumentIdsAsync(userId.Value, items.Select(d => d.Id))
             : new List<long>();
 
+        var likedIds = userId.HasValue && userId.Value > 0
+            ? await _unitOfWork.DocumentLikes.GetLikedDocumentIdsAsync(userId.Value, items.Select(d => d.Id))
+            : new List<long>();
+
         return new PagedResult<DocumentListDto>
         {
-            Items = items.Select(d => MapToListDto(d, favoritedIds.Contains(d.Id))),
+            Items = items.Select(d => MapToListDto(d, favoritedIds.Contains(d.Id), likedIds.Contains(d.Id))),
             TotalCount = totalCount,
             PageNumber = request.PageNumber,
             PageSize = request.PageSize
@@ -70,9 +80,13 @@ public class DocumentService : IDocumentService
             ? await _unitOfWork.DocumentFavorites.GetFavoritedDocumentIdsAsync(userId.Value, items.Select(d => d.Id))
             : new List<long>();
 
+        var likedIds = userId.HasValue && userId.Value > 0
+            ? await _unitOfWork.DocumentLikes.GetLikedDocumentIdsAsync(userId.Value, items.Select(d => d.Id))
+            : new List<long>();
+
         return new PagedResult<DocumentListDto>
         {
-            Items = items.Select(d => MapToListDto(d, favoritedIds.Contains(d.Id))),
+            Items = items.Select(d => MapToListDto(d, favoritedIds.Contains(d.Id), likedIds.Contains(d.Id))),
             TotalCount = totalCount,
             PageNumber = pageNumber,
             PageSize = pageSize
@@ -204,6 +218,7 @@ public class DocumentService : IDocumentService
 
         await _unitOfWork.Documents.DeleteAsync(id);
         await _unitOfWork.SaveChangesAsync();
+        await _likeService.ClearCacheByDocumentIdAsync(id);
     }
 
     public async Task IncrementViewCountAsync(long id)
@@ -254,7 +269,7 @@ public class DocumentService : IDocumentService
         return publishedCount;
     }
 
-    private static DocumentDto MapToDto(Document document, bool isFavorited = false)
+    private static DocumentDto MapToDto(Document document, bool isFavorited = false, bool isLiked = false)
     {
         return new DocumentDto
         {
@@ -267,6 +282,7 @@ public class DocumentService : IDocumentService
             CategoryName = document.Category?.Name,
             Status = (int)document.Status,
             ViewCount = document.ViewCount,
+            LikeCount = document.LikeCount,
             Version = document.Version,
             PublishTime = document.PublishTime,
             IsAutoPublished = document.IsAutoPublished,
@@ -274,11 +290,12 @@ public class DocumentService : IDocumentService
             CreatedBy = document.CreatedBy,
             CreatedAt = document.CreatedAt,
             UpdatedAt = document.UpdatedAt,
-            IsFavorited = isFavorited
+            IsFavorited = isFavorited,
+            IsLiked = isLiked
         };
     }
 
-    private static DocumentListDto MapToListDto(Document document, bool isFavorited = false)
+    private static DocumentListDto MapToListDto(Document document, bool isFavorited = false, bool isLiked = false)
     {
         return new DocumentListDto
         {
@@ -290,11 +307,13 @@ public class DocumentService : IDocumentService
             CategoryName = document.Category?.Name,
             Status = (int)document.Status,
             ViewCount = document.ViewCount,
+            LikeCount = document.LikeCount,
             Version = document.Version,
             PublishTime = document.PublishTime,
             CreatedAt = document.CreatedAt,
             UpdatedAt = document.UpdatedAt,
-            IsFavorited = isFavorited
+            IsFavorited = isFavorited,
+            IsLiked = isLiked
         };
     }
 }

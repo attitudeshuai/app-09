@@ -11,6 +11,7 @@ public class UnitOfWork : IUnitOfWork
     private IDocumentRepository? _documents;
     private IDocumentVersionRepository? _documentVersions;
     private IDocumentFavoriteRepository? _documentFavorites;
+    private IDocumentLikeRepository? _documentLikes;
     private IDocumentCommentRepository? _documentComments;
     private IDocumentViewHistoryRepository? _documentViewHistories;
     private IUserPasswordHistoryRepository? _userPasswordHistories;
@@ -25,6 +26,7 @@ public class UnitOfWork : IUnitOfWork
     public IDocumentRepository Documents => _documents ??= new DocumentRepository(_context);
     public IDocumentVersionRepository DocumentVersions => _documentVersions ??= new DocumentVersionRepository(_context);
     public IDocumentFavoriteRepository DocumentFavorites => _documentFavorites ??= new DocumentFavoriteRepository(_context);
+    public IDocumentLikeRepository DocumentLikes => _documentLikes ??= new DocumentLikeRepository(_context);
     public IDocumentCommentRepository DocumentComments => _documentComments ??= new DocumentCommentRepository(_context);
     public IDocumentViewHistoryRepository DocumentViewHistories => _documentViewHistories ??= new DocumentViewHistoryRepository(_context);
     public IUserPasswordHistoryRepository UserPasswordHistories => _userPasswordHistories ??= new UserPasswordHistoryRepository(_context);

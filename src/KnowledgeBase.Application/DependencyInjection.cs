@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentVersionService, DocumentVersionService>();
         services.AddScoped<IStatisticsService, StatisticsService>();
         services.AddScoped<IFavoriteService, FavoriteService>();
+        services.AddScoped<ILikeService, LikeService>();
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<IViewHistoryService, ViewHistoryService>();
         services.AddScoped<IPasswordValidator, PasswordValidator>();

@@ -10,6 +10,7 @@ public class Document : BaseEntity
     public Category? Category { get; set; }
     public DocumentStatus Status { get; set; } = DocumentStatus.Draft;
     public int ViewCount { get; set; }
+    public int LikeCount { get; set; }
     public int Version { get; set; } = 1;
     public DateTime? PublishTime { get; set; }
     public bool IsAutoPublished { get; set; }

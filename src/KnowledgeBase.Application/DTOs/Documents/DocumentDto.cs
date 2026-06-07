@@ -11,6 +11,7 @@ public class DocumentDto
     public string? CategoryName { get; set; }
     public int Status { get; set; }
     public int ViewCount { get; set; }
+    public int LikeCount { get; set; }
     public int Version { get; set; }
     public DateTime? PublishTime { get; set; }
     public bool IsAutoPublished { get; set; }
@@ -19,6 +20,7 @@ public class DocumentDto
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool IsFavorited { get; set; }
+    public bool IsLiked { get; set; }
 }
 
 public class DocumentListDto
@@ -31,11 +33,13 @@ public class DocumentListDto
     public string? CategoryName { get; set; }
     public int Status { get; set; }
     public int ViewCount { get; set; }
+    public int LikeCount { get; set; }
     public int Version { get; set; }
     public DateTime? PublishTime { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool IsFavorited { get; set; }
+    public bool IsLiked { get; set; }
 }
 
 public class CreateDocumentRequest
