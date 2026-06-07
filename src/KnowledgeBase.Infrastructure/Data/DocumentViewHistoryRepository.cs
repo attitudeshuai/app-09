@@ -34,6 +34,12 @@ public class DocumentViewHistoryRepository : IDocumentViewHistoryRepository
         }
     }
 
+    public async Task<DocumentViewHistory?> GetByUserAndDocumentAsync(long userId, long documentId)
+    {
+        return await _context.DocumentViewHistories
+            .FirstOrDefaultAsync(h => h.UserId == userId && h.DocumentId == documentId);
+    }
+
     public async Task<(IEnumerable<DocumentViewHistory> Items, int TotalCount)> GetHistoryByUserIdAsync(
         long userId,
         int pageNumber,
@@ -61,8 +67,9 @@ public class DocumentViewHistoryRepository : IDocumentViewHistoryRepository
             .CountAsync(h => h.UserId == userId);
     }
 
-    public async Task CleanupOldRecordsAsync(int maxRecordsPerUser, TimeSpan expirationPeriod)
+    public async Task<int> CleanupOldRecordsAsync(int maxRecordsPerUser, TimeSpan expirationPeriod)
     {
+        var removedCount = 0;
         var cutoffDate = DateTime.UtcNow - expirationPeriod;
 
         var expiredRecords = await _context.DocumentViewHistories
@@ -71,6 +78,7 @@ public class DocumentViewHistoryRepository : IDocumentViewHistoryRepository
 
         if (expiredRecords.Any())
         {
+            removedCount += expiredRecords.Count;
             _context.DocumentViewHistories.RemoveRange(expiredRecords);
         }
 
@@ -92,9 +100,12 @@ public class DocumentViewHistoryRepository : IDocumentViewHistoryRepository
                     .Take(userHistoryCount - maxRecordsPerUser)
                     .ToListAsync();
 
+                removedCount += recordsToRemove.Count;
                 _context.DocumentViewHistories.RemoveRange(recordsToRemove);
             }
         }
+
+        return removedCount;
     }
 
     public async Task DeleteByDocumentIdAsync(long documentId)

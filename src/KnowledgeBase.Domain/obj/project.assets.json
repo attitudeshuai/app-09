@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj",
+      "projectUniqueName": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj",
       "projectName": "KnowledgeBase.Domain",
-      "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj",
+      "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj",
       "packagesPath": "C:\\Users\\charlesshuai\\.nuget\\packages\\",
-      "outputPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\obj\\",
+      "outputPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\charlesshuai\\AppData\\Roaming\\NuGet\\NuGet.Config"

@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace KnowledgeBase.Infrastructure.Migrations
 {
+    /// <inheritdoc />
     public partial class AddDocumentViewHistory : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -51,6 +53,7 @@ namespace KnowledgeBase.Infrastructure.Migrations
                 column: "ViewedAt");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

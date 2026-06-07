@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.API\\KnowledgeBase.API.csproj": {}
+    "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.API\\KnowledgeBase.API.csproj": {}
   },
   "projects": {
-    "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.API\\KnowledgeBase.API.csproj": {
+    "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.API\\KnowledgeBase.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.API\\KnowledgeBase.API.csproj",
+        "projectUniqueName": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.API\\KnowledgeBase.API.csproj",
         "projectName": "KnowledgeBase.API",
-        "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.API\\KnowledgeBase.API.csproj",
+        "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.API\\KnowledgeBase.API.csproj",
         "packagesPath": "C:\\Users\\charlesshuai\\.nuget\\packages\\",
-        "outputPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.API\\obj\\",
+        "outputPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.API\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\charlesshuai\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -26,14 +26,14 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj": {
-                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj"
+              "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj": {
+                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj"
               },
-              "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj": {
-                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj"
+              "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj": {
+                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj"
               },
-              "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\KnowledgeBase.Infrastructure.csproj": {
-                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\KnowledgeBase.Infrastructure.csproj"
+              "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\KnowledgeBase.Infrastructure.csproj": {
+                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\KnowledgeBase.Infrastructure.csproj"
               }
             }
           }
@@ -50,7 +50,7 @@
           "dependencies": {
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
-              "version": "[7.0.2, )"
+              "version": "[7.0.0, )"
             },
             "Microsoft.EntityFrameworkCore.Tools": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
@@ -86,14 +86,14 @@
         }
       }
     },
-    "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj": {
+    "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj",
+        "projectUniqueName": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj",
         "projectName": "KnowledgeBase.Application",
-        "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj",
+        "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj",
         "packagesPath": "C:\\Users\\charlesshuai\\.nuget\\packages\\",
-        "outputPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\obj\\",
+        "outputPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\charlesshuai\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -108,8 +108,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj": {
-                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj"
+              "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj": {
+                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj"
               }
             }
           }
@@ -124,6 +124,10 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[7.0.2, )"
+            },
             "Microsoft.Extensions.Configuration": {
               "target": "Package",
               "version": "[7.0.0, )"
@@ -132,9 +136,13 @@
               "target": "Package",
               "version": "[7.0.0, )"
             },
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
-              "version": "[7.0.2, )"
+              "version": "[7.0.3, )"
             }
           },
           "imports": [
@@ -157,14 +165,14 @@
         }
       }
     },
-    "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj": {
+    "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj",
+        "projectUniqueName": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj",
         "projectName": "KnowledgeBase.Domain",
-        "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj",
+        "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj",
         "packagesPath": "C:\\Users\\charlesshuai\\.nuget\\packages\\",
-        "outputPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\obj\\",
+        "outputPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\charlesshuai\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -210,14 +218,14 @@
         }
       }
     },
-    "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\KnowledgeBase.Infrastructure.csproj": {
+    "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\KnowledgeBase.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\KnowledgeBase.Infrastructure.csproj",
+        "projectUniqueName": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\KnowledgeBase.Infrastructure.csproj",
         "projectName": "KnowledgeBase.Infrastructure",
-        "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\KnowledgeBase.Infrastructure.csproj",
+        "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\KnowledgeBase.Infrastructure.csproj",
         "packagesPath": "C:\\Users\\charlesshuai\\.nuget\\packages\\",
-        "outputPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\obj\\",
+        "outputPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\charlesshuai\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -232,11 +240,11 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj": {
-                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj"
+              "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj": {
+                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Application\\KnowledgeBase.Application.csproj"
               },
-              "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj": {
-                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\session-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj"
+              "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj": {
+                "projectPath": "D:\\charles\\program\\ai\\apps\\02.work session\\solo-0601\\source code\\app-09\\src\\KnowledgeBase.Domain\\KnowledgeBase.Domain.csproj"
               }
             }
           }
@@ -270,6 +278,14 @@
               "version": "[7.0.0, )"
             },
             "Microsoft.Extensions.DependencyInjection": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "Microsoft.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "Microsoft.Extensions.Options.ConfigurationExtensions": {
               "target": "Package",
               "version": "[7.0.0, )"
             },

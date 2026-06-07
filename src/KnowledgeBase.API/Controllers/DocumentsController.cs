@@ -3,6 +3,8 @@ using KnowledgeBase.Application.DTOs.Documents;
 using KnowledgeBase.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace KnowledgeBase.API.Controllers;
@@ -14,12 +16,17 @@ namespace KnowledgeBase.API.Controllers;
 public class DocumentsController : ControllerBase
 {
     private readonly IDocumentService _documentService;
-    private readonly IViewHistoryService _viewHistoryService;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<DocumentsController> _logger;
 
-    public DocumentsController(IDocumentService documentService, IViewHistoryService viewHistoryService)
+    public DocumentsController(
+        IDocumentService documentService,
+        IServiceScopeFactory scopeFactory,
+        ILogger<DocumentsController> logger)
     {
         _documentService = documentService;
-        _viewHistoryService = viewHistoryService;
+        _scopeFactory = scopeFactory;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -71,7 +78,7 @@ public class DocumentsController : ControllerBase
             
             if (userId.HasValue && userId.Value > 0)
             {
-                _ = _viewHistoryService.RecordViewAsync(userId.Value, id);
+                _ = RecordViewHistoryAsync(userId.Value, id);
             }
             
             return Ok(document);
@@ -79,6 +86,20 @@ public class DocumentsController : ControllerBase
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+    }
+
+    private async Task RecordViewHistoryAsync(long userId, long documentId)
+    {
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var viewHistoryService = scope.ServiceProvider.GetRequiredService<IViewHistoryService>();
+            await viewHistoryService.RecordViewAsync(userId, documentId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "异步记录浏览历史失败，UserId: {UserId}, DocumentId: {DocumentId}", userId, documentId);
         }
     }
 

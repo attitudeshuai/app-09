@@ -60,9 +60,9 @@ public class ViewHistoryCleanupService : BackgroundService
         var maxRecordsPerUser = _options.Value.MaxRecordsPerUser;
         var expirationPeriod = TimeSpan.FromDays(_options.Value.ExpirationDays);
 
-        await unitOfWork.DocumentViewHistories.CleanupOldRecordsAsync(maxRecordsPerUser, expirationPeriod);
+        var removedCount = await unitOfWork.DocumentViewHistories.CleanupOldRecordsAsync(maxRecordsPerUser, expirationPeriod);
         await unitOfWork.SaveChangesAsync();
 
-        _logger.LogInformation("View history cleanup completed successfully.");
+        _logger.LogInformation("View history cleanup completed successfully. Removed {Count} records.", removedCount);
     }
 }
